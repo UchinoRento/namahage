@@ -9,6 +9,23 @@ body {
     color: var(--fontColor);
     font-family: helvetica;
 }
+
+.posts{
+  margin-top: 10px; 
+  padding:10px; 
+  border: 1px solid #FFFFFF; 
+  border-radius: 8px;
+  max-height: 250px;
+  overflow-y: auto; 
+  }
+.post { 
+  padding: 6px;
+  border-bottom: 1px solid #ddd; 
+  white-space: pre-wrap;
+  } 
+.post:last-child { border-bottom: none; } 
+textarea { width: 100%; padding: 6px; border-radius: 6px; } 
+
 li {
     list-style: circle;
   }
