@@ -15,4 +15,3 @@ switcher.addEventListener('click', function() {
 
     console.log('current class name: '+className);
 });
-
