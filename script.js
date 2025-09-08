@@ -1,549 +1,120 @@
+'use strict';
+const switcher = document.querySelector('.btn');
+switcher.addEventListener('click', function() {
+document.body.classList.toggle('light-theme');
 
+document.body.classList.toggle('dark-theme');
 
 
-<meta charset="UTF-8">
 
-<meta http-equiv="X-UA-Compatiable" content="IE=edge">
+const className = document.body.className;
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+if(className=="light-theme"){
 
-<title>nits_ch</title>
+    this.textContent="Dark";
 
-<link rel="stylesheet" href="style.css">
+}else{
 
+    this.textContent = "Light";
 
+}
 
-<h1>佐世保高専 掲示板</h1>
 
 
+console.log('current class name: '+className);
 
-<nav>
+});
+const routes={
+'/': 'home',
 
-    <a href="#/"data-link>ホーム</a><br>
+'/s':'s',
 
-    <a href="#/m"data-link>機械工学科</a><br>
+'/m':'m',
 
-    <a href="#/e"data-link>電気電子工学科</a><br>
+'/e':'e',
 
-    <a href="#/s"data-link>電子制御工学科</a><br>
+'/c':'c',
 
-    <a href="#/c"data-link>物質工学科</a><br>
+'/s/test':'stest',
 
-</nav>
+'/s/free':'sfree',
 
+'/m/test':'mtest',
 
+'/m/free':'mfree',
 
-<!--ホーム-->
+'/e/free':'efree',
 
-<div id="app">
+'/e/test':'etest',
 
-    <div id="home" class="page active">
+'/c/test':'ctest',
 
-        <h2>ホーム</h2>
+'/c/free':'cfree'
 
-        <p>佐世保高専の掲示板です！</p>
+};
+function getPosts(page){
+return JSON.parse(localStorage.getItem(`posts-${page}`) ||'[]');
 
-        <p>学科を選んで情報を共有しましょう！</p>
+}
+function savePosts(page,posts){
+localStorage.setItem(`posts-${page}`,JSON.stringify(posts));
 
-    </div>
+}
+function addPost(page){
+const input = document.getElementById(page + '-input');
 
+const text = input.value.trim();
 
+if(text ==='')return;
 
-<!--電子制御工学科-->
+const posts = getPosts(page);
 
-    <div id="s" class="page">
+posts.unshift({text,date: new Date().toLocaleString()});
 
-        <h2>電子制御工学科ページ</h2>
+savePosts(page,posts);
 
-        <nav>
+input.value='';
 
-            <a href="#/s/test"data-link>テスト情報</a><br>
+renderPosts(page);
 
-            <a href="#/s/free"data-link>自由報告欄</a><br>
+}
+function renderPosts(page){
+const posts = getPosts(page);
 
-        </nav>
+const container = document.getElementById(page + '-posts');
 
-    </div>
+container.innerHTML = '';
 
+posts.forEach(post=>{
 
+    const div = document.createElement('div');
 
-    <!--テスト情報-->
+    div.className = 'post';
 
-    <div id="stest" class="page">
+    div.innerHTML = `<strong>${post.date}</strong><br>${post.text}`;
 
-        <h2>テスト情報</h2>
+    container.appendChild(div);
 
+});
 
+}
+function router(){
+const path=location.hash.slice(1) || '/';
 
-        <!--戻る-->
+document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
 
-        <nav>
+const pageId = routes[path];
 
-            <a href="#/s"data-link>戻る</a><br>
+if(pageId) {
 
-        </nav>
+    document.getElementById(pageId).classList.add('active');
 
+    renderPosts(pageId);
 
+}
 
-        <p>
-
-            <!--以下に日付・テスト科目を入力-->
-
-            8月4日　コミュ、電回Ⅱ
-
-        </p>
-
-        <textarea id="stest-input" placeholder="ここに書き込んでください"></textarea>
-
-        <button onclick="addPost('stest')">投稿</button>
-
-        <div id="stest-posts" class="posts"></div>
-
-    </div>
-
-
-
-    <!--自由報告欄-->
-
-    <div id="sfree" class="page">
-
-        <h2>自由報告欄</h2>
-
-
-
-        <!--戻る-->
-
-        <nav>
-
-            <a href="#/s"data-link>戻る</a><br>
-
-        </nav>
-
-
-
-        <p>いろんな情報を共有しあいましょう！</p>
-
-        <textarea id="sfree-input" placeholder="ここに書き込んでください"></textarea>
-
-        <button onclick="addPost('sfree')">投稿</button>
-
-        <div id="sfree-posts" class="posts"></div>
-
-    </div>
-
-
-
-<!--機械工学科-->
-
-    <div id="m" class="page">
-
-        <h2>機械工学科ページ</h2>
-
-        <nav>
-
-            <a href="#/m/test"data-link>テスト情報</a><br>
-
-            <a href="#/m/free"data-link>自由報告欄</a><br>
-
-        </nav>
-
-    </div>
-
-
-
-    <!--テスト情報-->
-
-    <div id="mtest" class="page">
-
-        <h2>テスト情報</h2>
-
-
-
-         <!--戻る-->
-
-         <nav>
-
-            <a href="#/m"data-link>戻る</a><br>
-
-        </nav>
-
-
-
-        <p>
-
-            <!--以下に日付・テスト科目を入力-->
-
-            8月4日　コミュ、メカトロ
-
-        </p>
-
-        <textarea id="mtest-input" placeholder="ここに書き込んでください"></textarea>
-
-        <button onclick="addPost('mtest')">投稿</button>
-
-        <div id="mtest-posts" class="posts"></div>
-
-    </div>
-
-
-
-    <!--自由報告欄-->
-
-    <div id="mfree" class="page">
-
-        <h2>自由報告欄</h2>
-
-
-
-        <!--戻る-->
-
-        <nav>
-
-            <a href="#/m"data-link>戻る</a><br>
-
-        </nav>
-
-
-
-        <p>いろんな情報を共有しあいましょう！</p>
-
-        <textarea id="mfree-input" placeholder="ここに書き込んでください"></textarea>
-
-        <button onclick="addPost('mfree')">投稿</button>
-
-        <div id="mfree-posts" class="posts"></div>
-
-    </div>
-
-
-
-<!--電気電子工学科-->
-
-    <div id="e" class="page">
-
-        <h2>電気電子工学科ページ</h2>
-
-        <nav>
-
-            <a href="#/e/test"data-link>テスト情報</a><br>
-
-            <a href="#/e/free"data-link>自由報告欄</a><br>
-
-        </nav>
-
-    </div>
-
-
-
-    <!--テスト情報-->
-
-    <div id="etest" class="page">
-
-        <h2>テスト情報</h2>
-
-
-
-        <!--戻る-->
-
-        <nav>
-
-            <a href="#/e"data-link>戻る</a><br>
-
-        </nav>
-
-
-
-        <p>
-
-            <!--以下に日付・テスト科目を入力-->
-
-            8月4日　コミュ、IoT
-
-        </p>
-
-        <textarea id="etest-input" placeholder="ここに書き込んでください"></textarea>
-
-        <button onclick="addPost('etest')">投稿</button>
-
-        <div id="etest-posts" class="posts"></div>
-
-    </div>
-
-
-
-    <!--自由報告欄-->
-
-    <div id="efree" class="page">
-
-        <h2>自由報告欄</h2>
-
-
-
-        <!--戻る-->
-
-        <nav>
-
-            <a href="#/e"data-link>戻る</a><br>
-
-        </nav>
-
-
-
-        <p>いろんな情報を共有しあいましょう！</p>
-
-        <textarea id="efree-input" placeholder="ここに書き込んでください"></textarea>
-
-        <button onclick="addPost('efree')">投稿</button>
-
-        <div id="efree-posts" class="posts"></div>
-
-    </div>
-
-
-
-<!--物質工学科-->
-
-    <div id="c" class="page">
-
-        <h2>物質工学科ページ</h2>
-
-        <nav>
-
-            <a href="#/c/test"data-link>テスト情報</a><br>
-
-            <a href="#/c/free"data-link>自由報告欄</a><br>
-
-        </nav>
-
-    </div>
-
-
-
-    <!--テスト情報-->
-
-    <div id="ctest" class="page">
-
-        <p>テスト情報</p>
-
-
-
-        <!--戻る-->
-
-        <nav>
-
-            <a href="#/c"data-link>戻る</a><br>
-
-        </nav>
-
-
-
-        <p>
-
-            <!--以下に日付・テスト科目を入力-->
-
-            8月4日　コミュ、物化Ⅱ
-
-        </p>
-
-        <textarea id="ctest-input" placeholder="ここに書き込んでください"></textarea>
-
-        <button onclick="addPost('ctest')">投稿</button>
-
-        <div id="ctest-posts" class="posts"></div>
-
-    </div>
-
-
-
-    <!--自由報告欄-->
-
-    <div id="cfree" class="page">
-
-        <h2>自由報告欄</h2>
-
-
-
-        <!--戻る-->
-
-        <nav>
-
-            <a href="#/c"data-link>戻る</a><br>
-
-        </nav>
-
-
-
-        <p>いろんな情報を共有しあいましょう！</p>
-
-        <textarea id="cfree-input" placeholder="ここに書き込んでください"></textarea>
-
-        <button onclick="addPost('cfree')">投稿</button>
-
-        <div id="cfree-posts" class="posts"></div>
-
-    </div>
-
-</div>
-
-
-
-<script>
-
-
-
-    window.addEventListener('load', router);
-
-
-
-    window.addEventListener('hashchange', router);
-
-
-
-    function router() {
-
-        const hash = location.hash.replace("#/", "") || "home";
-
-        document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
-
-        const page = document.getElementById(hash) || document.getElementById("home");
-
-        page.classList.add("active");
-
-    }
-
-    
-
-</script>
-
-
-
-<script type="module">
-
-  // Import the functions you need from the SDKs you need
-
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
-
-    import { getFirestore, collection, addDoc, getDocs, query, orderBy } 
-
-        from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
-
-    // Firestore 初期化
-
-    const db = getFirestore(app);
-
-    // 🔹 投稿処理
-
-    async function addPost(pageId) {
-
-        const input = document.getElementById(`${pageId}-input`);
-
-        const text = input.value;
-
-        if (!text) return;
-
-        
-
-        await addDoc(collection(db, pageId), {
-
-            text: text,
-
-            time: Date.now()
-
-        });
-
-        input.value = "";
-
-        location.reload(); // ← シンプルにリロードで最新表示
-
-    }
-
-    // 🔹 読み込み処理
-
-    async function loadPosts(pageId) {
-
-        const list = document.getElementById(`${pageId}-posts`);
-
-        if (!list) return;
-
-        
-
-        const q = query(collection(db, pageId), orderBy("time", "desc"));
-
-        const snapshot = await getDocs(q);
-
-        
-
-        list.innerHTML = "";
-
-        snapshot.forEach(doc => {
-
-            const div = document.createElement("div");
-
-            div.textContent = doc.data().text;
-
-            list.appendChild(div);
-
-        });
-
-    }
-
-    // ページごとに投稿を読み込む
-
-    ["stest","sfree","mtest","mfree","etest","efree","ctest","cfree"]
-
-        .forEach(loadPosts);
-
-    // TODO: Add SDKs for Firebase products that you want to use
-
-    // https://firebase.google.com/docs/web/setup#available-libraries
-
-
-
-    // Your web app's Firebase configuration
-
-    const firebaseConfig = {
-
-        apiKey: "AIzaSyC2FOiD7rvmd8hwPEt7YWlULmc9mnE0TC4",
-
-        authDomain: "my-bbs-9ef4c.firebaseapp.com",
-
-        projectId: "my-bbs-9ef4c",
-
-        storageBucket: "my-bbs-9ef4c.firebasestorage.app",
-
-        messagingSenderId: "813682728076",
-
-        appId: "1:813682728076:web:f17de67cd4d2cdc4dcafa9"
-
-    };
-
-
-
-    // Initialize Firebase
-
-    const app = initializeApp(firebaseConfig);
-
-</script>
-
-
-
-
-
-<ul>
-
-    <script>alert('佐世保高専の掲示板です！')</script>
-
-</ul>
-
-<div>
-
-    <button class="btn">Light</button>
-
-</div>
-
-<script src="script.js"></script>
-
-<noscript>You need to enable JavaScript to view the full site.</noscript>
-
+}
+window.addEventListener('load', router);
+window.addEventListener('hashchange', router);
 
 
