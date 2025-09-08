@@ -1,84 +1,101 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatiable" content="IE=edge">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>nits_ch</title>
+    <title>佐世保高専掲示板</title>
     <link rel="stylesheet" href="main.css">
 </head>
 <body class="dark-theme">
     <h1>佐世保高専 掲示板</h1>
 
     <nav>
-        <a href="#/"data-link>ホーム</a><br>
-        <a href="#/m"data-link>機械工学科</a><br>
-        <a href="#/e"data-link>電気電子工学科</a><br>
-        <a href="#/s"data-link>電子制御工学科</a><br>
-        <a href="#/c"data-link>物質工学科</a><br>
+        <a href="#/" data-link>ホーム</a><br>
+        <a href="#/s" data-link>電子制御工学科</a><br>
+        <a href="#/m" data-link>機械工学科</a><br>
+        <a href="#/e" data-link>電気電子工学科</a><br>
+        <a href="#/c" data-link>物質工学科</a><br>
     </nav>
 
     <div id="app">
         <div id="home" class="page active">
             <h2>ホーム</h2>
-            <p>佐世保高専の掲示板です！</p>
             <p>学科を選んで情報を共有しましょう！</p>
         </div>
+
         <div id="s" class="page">
             <h2>電子制御工学科ページ</h2>
-            <p>テスト情報</p>
-            <textarea id="m-input" placeholder="ここに書き込んでください"></textarea>
+            <textarea id="post-input" placeholder="ここに書き込んでください"></textarea><br>
+            <button id="submit-btn">投稿する</button>
+            <h3>投稿一覧</h3>
+            <ul id="post-list"></ul>
         </div>
+
         <div id="m" class="page">
             <h2>機械工学科ページ</h2>
         </div>
+
         <div id="e" class="page">
             <h2>電気電子工学科ページ</h2>
         </div>
+
         <div id="c" class="page">
             <h2>物質工学科ページ</h2>
         </div>
     </div>
 
+    <button class="btn">Dark</button>
+
     <script>
-        const routes={
-            '/': 'home',
-            '/s':'s',
-            '/m':'m',
-            '/e':'e',
-            '/c':'c'
-        };
-
-        function router(){
-            const path=location.hash.slice(1) || '/';
-            document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
+        // ルーティング
+        const routes = { '/': 'home', '/s': 's', '/m': 'm', '/e': 'e', '/c': 'c' };
+        function router() {
+            const path = location.hash.slice(1) || '/';
+            document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
             const pageId = routes[path];
-            if(pageId) document.getElementById(pageId).classList.add('active');
+            if (pageId) document.getElementById(pageId).classList.add('active');
+            if (pageId === 's') fetchPosts();
         }
-
         window.addEventListener('load', router);
-
         window.addEventListener('hashchange', router);
+
+        // 投稿処理
+        const submitBtn = document.getElementById('submit-btn');
+        const postInput = document.getElementById('post-input');
+        const postList = document.getElementById('post-list');
+
+        submitBtn.addEventListener('click', () => {
+            const content = postInput.value.trim();
+            if (!content) return alert("内容を入力してください");
+
+            fetch('http://localhost:3000/posts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: '名無し', content })
+            })
+            .then(res => res.json())
+            .then(() => {
+                postInput.value = '';
+                fetchPosts();
+            })
+            .catch(err => console.error(err));
+        });
+
+        // 投稿一覧取得
+        function fetchPosts() {
+            fetch('http://localhost:3000/posts')
+                .then(res => res.json())
+                .then(data => {
+                    postList.innerHTML = '';
+                    data.forEach(p => {
+                        const li = document.createElement('li');
+                        li.textContent = `[${p.time}] ${p.name}: ${p.content}`;
+                        postList.appendChild(li);
+                    });
+                })
+                .catch(err => console.error(err));
+        }
     </script>
-    <div>
-        <button class="btn">Dark</button>
-    </div>
-    <script src="app.js"></script>
-    <noscript>You need to enable JavaScript to view the full site.</noscript>
-</body>
-</html>
-
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <title>My Page</title>
-  <!-- CSSを読み込む -->
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-
-  <!-- JavaScriptを読み込む -->
-  <script src="script.js"></script>
 </body>
 </html>
