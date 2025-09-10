@@ -1,36 +1,16 @@
 'use strict';
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
-import {
-  getAuth, onAuthStateChanged,
-  createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut
-} from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
-import {
-  getFirestore, collection, addDoc,
-  query, where, orderBy, onSnapshot
-} from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
-
-// ===== Firebase 設定 =====
-const firebaseConfig = {
-  apiKey: "AIzaSyDHCpNqhEL-a1sLsU4PpXboaWJ-P_XMwXs",
-  authDomain: "sasasebokosen.firebaseapp.com",
-  projectId: "sasasebokosen",
-  storageBucket: "sasasebokosen.firebasestorage.app",
-  messagingSenderId: "607000741264",
-  appId: "1:607000741264:web:1d3f5c501296e9597b9f15",
-  measurementId: "G-KJHJW3EH4T"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+// ===== 疑似ユーザー管理（ローカル） =====
+let currentUser = null; // ログイン中ユーザー
+const users = []; // {email, password}
 
 // ===== テーマ切替 =====
 const switcher = document.querySelector('.btn');
 switcher.addEventListener('click', () => {
   document.body.classList.toggle('light-theme');
   document.body.classList.toggle('dark-theme');
-  switcher.textContent = document.body.className === 'light-theme' ? 'Dark' : 'Light';
+  switcher.textContent =
+    document.body.className === 'light-theme' ? 'Dark' : 'Light';
 });
 
 // ===== ページルーティング =====
@@ -44,85 +24,84 @@ function router() {
 window.addEventListener('load', router);
 window.addEventListener('hashchange', router);
 
-// ===== 登録 =====
-document.getElementById("register-form").addEventListener("submit", async e => {
+// ===== 登録（ローカル） =====
+document.getElementById('register-form').addEventListener('submit', e => {
   e.preventDefault();
-  const email = document.getElementById("register-email").value;
-  const pass = document.getElementById("register-password").value;
-  try {
-    await createUserWithEmailAndPassword(auth, email, pass);
-    alert("登録完了！ログインしてください");
-    document.getElementById("register-form").reset();
-  } catch (err) {
-    alert(err.message);
+  const email = document.getElementById('register-email').value;
+  const pass = document.getElementById('register-password').value;
+
+  if (users.find(u => u.email === email)) {
+    alert('このメールアドレスは既に登録されています');
+    return;
+  }
+  users.push({ email, password: pass });
+  alert('登録完了！ログインしてください');
+  document.getElementById('register-form').reset();
+});
+
+// ===== ログイン（ローカル） =====
+document.getElementById('login-form').addEventListener('submit', e => {
+  e.preventDefault();
+  const email = document.getElementById('login-email').value;
+  const pass = document.getElementById('login-password').value;
+
+  const user = users.find(u => u.email === email && u.password === pass);
+  if (user) {
+    currentUser = user;
+    updateAuthUI(currentUser);
+    document.getElementById('login-form').reset();
+  } else {
+    alert('メールアドレスまたはパスワードが違います');
   }
 });
 
-// ===== ログイン =====
-document.getElementById("login-form").addEventListener("submit", async e => {
-  e.preventDefault();
-  const email = document.getElementById("login-email").value;
-  const pass = document.getElementById("login-password").value;
-  try {
-    await signInWithEmailAndPassword(auth, email, pass);
-    document.getElementById("login-form").reset();
-  } catch (err) {
-    alert(err.message);
-  }
-});
-
-// ===== ログアウト =====
-document.getElementById("logout-btn").addEventListener("click", () => {
-  signOut(auth);
+// ===== ログアウト（ローカル） =====
+document.getElementById('logout-btn').addEventListener('click', () => {
+  currentUser = null;
+  updateAuthUI(null);
 });
 
 // ===== UI更新 =====
 function updateAuthUI(user) {
   if (user) {
-    document.getElementById("login-section").style.display = "none";
-    document.getElementById("logout-section").style.display = "block";
-    document.getElementById("username-display").textContent = user.email;
+    document.getElementById('login-section').style.display = 'none';
+    document.getElementById('logout-section').style.display = 'block';
+    document.getElementById('username-display').textContent = user.email;
   } else {
-    document.getElementById("login-section").style.display = "block";
-    document.getElementById("logout-section").style.display = "none";
+    document.getElementById('login-section').style.display = 'block';
+    document.getElementById('logout-section').style.display = 'none';
   }
 }
-onAuthStateChanged(auth, user => updateAuthUI(user));
 
-// ===== 投稿 =====
-window.addPost = async function (pageId) {
-  const input = document.getElementById(pageId + "-input");
+// ===== 投稿（ローカル） =====
+const posts = { home: [], s: [], m: [], e: [], c: [] };
+
+window.addPost = function (pageId) {
+  const input = document.getElementById(pageId + '-input');
   const text = input.value.trim();
-  const user = auth.currentUser;
-  if (!user) { alert("ログインしてください"); return; }
+  if (!currentUser) {
+    alert('ログインしてください');
+    return;
+  }
   if (!text) return;
 
-  await addDoc(collection(db, "posts"), {
-    page: pageId,
-    text: text,
-    uid: user.uid,
-    email: user.email,
-    createdAt: new Date()
-  });
-  input.value = "";
+  posts[pageId].unshift({ email: currentUser.email, text });
+  renderPosts(pageId);
+  input.value = '';
 };
 
-// 投稿リアルタイム表示
-["home", "s", "m", "e", "c"].forEach(page => {
-  const q = query(
-    collection(db, "posts"),
-    where("page", "==", page),
-    orderBy("createdAt", "desc")
-  );
-  onSnapshot(q, snapshot => {
-    const container = document.getElementById(page + "-posts");
-    container.innerHTML = "";
-    snapshot.forEach(doc => {
-      const data = doc.data();
-      const div = document.createElement("div");
-      div.className = "post";
-      div.textContent = `${data.email}: ${data.text}`;
-      container.appendChild(div);
-    });
+// ===== 投稿描画（ローカル） =====
+function renderPosts(pageId) {
+  const container = document.getElementById(pageId + '-posts');
+  container.innerHTML = '';
+  posts[pageId].forEach(p => {
+    const div = document.createElement('div');
+    div.className = 'post';
+    div.textContent = `${p.email}: ${p.text}`;
+    container.appendChild(div);
   });
-});
+}
+
+// 初期表示用
+['home', 's', 'm', 'e', 'c'].forEach(renderPosts);
+
