@@ -1,216 +1,82 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatiable" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>nits_ch</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <title>佐世保高専 掲示板</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body class="dark-theme">
-    <h1>佐世保高専 掲示板</h1>
+  <!-- 🔑 ログイン / 新規登録 -->
+  <div id="login-section">
+    <h2>ログイン</h2>
+    <form id="login-form">
+      <input id="login-username" type="text" placeholder="ユーザー名" required>
+      <input id="login-password" type="password" placeholder="パスワード" required>
+      <button type="submit">ログイン</button>
+    </form>
 
-    <nav>
-        <a href="#/" data-link>ホーム</a><br>
-        <a href="#/m" data-link>機械工学科</a><br>
-        <a href="#/e" data-link>電気電子工学科</a><br>
-        <a href="#/s" data-link>電子制御工学科</a><br>
-        <a href="#/c" data-link>物質工学科</a><br>
-    </nav>
+    <h3>新規登録</h3>
+    <form id="register-form">
+      <input id="register-username" type="text" placeholder="ユーザー名" required>
+      <input id="register-password" type="password" placeholder="パスワード" required>
+      <button type="submit">登録</button>
+    </form>
+  </div>
 
-    <!--ホーム-->
-    <div id="app">
-        <div id="home" class="page active">
-            <h2>ホーム</h2>
-            <p>佐世保高専の掲示板です！</p>
-            <p>学科を選んで情報を共有しましょう！</p>
-        </div>
+  <!-- 👤 ログイン後表示 -->
+  <div id="logout-section" style="display:none;">
+    <p>ログイン中: <span id="username-display"></span></p>
+    <button id="logout-btn">ログアウト</button>
+  </div>
 
-        <!--電子制御工学科-->
-        <div id="s" class="page">
-            <h2>電子制御工学科ページ</h2>
-            <nav>
-                <a href="#/stest" data-link>テスト情報</a><br>
-                <a href="#/sfree" data-link>自由報告欄</a><br>
-            </nav>
-        </div>
+  <!-- 🔗 ナビゲーション -->
+  <nav>
+    <a href="#/" data-link>ホーム</a> |
+    <a href="#/s" data-link>電子制御</a> |
+    <a href="#/m" data-link>機械</a> |
+    <a href="#/e" data-link>電気電子</a> |
+    <a href="#/c" data-link>物質</a>
+  </nav>
 
-        <!--テスト情報-->
-        <div id="stest" class="page">
-            <h2>テスト情報</h2>
-            <nav><a href="#/s" data-link>戻る</a><br></nav>
-            <p>8月4日　コミュ、電回Ⅱ</p>
-            <textarea id="stest-input" placeholder="ここに書き込んでください"></textarea>
-            <button onclick="addPost('stest')">投稿</button>
-            <div id="stest-posts" class="posts"></div>
-        </div>
+  <!-- 📄 ページ群 -->
+  <div id="home" class="page active">
+    <h2>ホーム</h2>
+    <input id="home-input" type="text" placeholder="投稿を書いてください">
+    <button onclick="addPost('home')">投稿</button>
+    <div id="home-posts"></div>
+  </div>
 
-        <!--自由報告欄-->
-        <div id="sfree" class="page">
-            <h2>自由報告欄</h2>
-            <nav><a href="#/s" data-link>戻る</a><br></nav>
-            <p>いろんな情報を共有しあいましょう！</p>
-            <textarea id="sfree-input" placeholder="ここに書き込んでください"></textarea>
-            <button onclick="addPost('sfree')">投稿</button>
-            <div id="sfree-posts" class="posts"></div>
-        </div>
-    
-        <!--機械工学科-->
-        <div id="m" class="page">
-            <h2>機械工学科ページ</h2>
-            <nav>
-                <a href="#/mtest" data-link>テスト情報</a><br>
-                <a href="#/mfree" data-link>自由報告欄</a><br>
-            </nav>
-        </div>
+  <div id="s" class="page">
+    <h2>電子制御工学科</h2>
+    <input id="s-input" type="text" placeholder="投稿を書いてください">
+    <button onclick="addPost('s')">投稿</button>
+    <div id="s-posts"></div>
+  </div>
 
-        <div id="mtest" class="page">
-            <h2>テスト情報</h2>
-            <nav><a href="#/m" data-link>戻る</a><br></nav>
-            <p>8月4日　コミュ、メカトロ</p>
-            <textarea id="mtest-input" placeholder="ここに書き込んでください"></textarea>
-            <button onclick="addPost('mtest')">投稿</button>
-            <div id="mtest-posts" class="posts"></div>
-        </div>
+  <div id="m" class="page">
+    <h2>機械工学科</h2>
+    <input id="m-input" type="text" placeholder="投稿を書いてください">
+    <button onclick="addPost('m')">投稿</button>
+    <div id="m-posts"></div>
+  </div>
 
-        <div id="mfree" class="page">
-            <h2>自由報告欄</h2>
-            <nav><a href="#/m" data-link>戻る</a><br></nav>
-            <p>いろんな情報を共有しあいましょう！</p>
-            <textarea id="mfree-input" placeholder="ここに書き込んでください"></textarea>
-            <button onclick="addPost('mfree')">投稿</button>
-            <div id="mfree-posts" class="posts"></div>
-        </div>
+  <div id="e" class="page">
+    <h2>電気電子工学科</h2>
+    <input id="e-input" type="text" placeholder="投稿を書いてください">
+    <button onclick="addPost('e')">投稿</button>
+    <div id="e-posts"></div>
+  </div>
 
-        <!--電気電子工学科-->
-        <div id="e" class="page">
-            <h2>電気電子工学科ページ</h2>
-            <nav>
-                <a href="#/etest" data-link>テスト情報</a><br>
-                <a href="#/efree" data-link>自由報告欄</a><br>
-            </nav>
-        </div>
+  <div id="c" class="page">
+    <h2>物質工学科</h2>
+    <input id="c-input" type="text" placeholder="投稿を書いてください">
+    <button onclick="addPost('c')">投稿</button>
+    <div id="c-posts"></div>
+  </div>
 
-        <div id="etest" class="page">
-            <h2>テスト情報</h2>
-            <nav><a href="#/e" data-link>戻る</a><br></nav>
-            <p>8月4日　コミュ、IoT</p>
-            <textarea id="etest-input" placeholder="ここに書き込んでください"></textarea>
-            <button onclick="addPost('etest')">投稿</button>
-            <div id="etest-posts" class="posts"></div>
-        </div>
+  <!-- 🌙 ダークモード切り替え -->
+  <button class="btn">Light</button>
 
-        <div id="efree" class="page">
-            <h2>自由報告欄</h2>
-            <nav><a href="#/e" data-link>戻る</a><br></nav>
-            <p>いろんな情報を共有しあいましょう！</p>
-            <textarea id="efree-input" placeholder="ここに書き込んでください"></textarea>
-            <button onclick="addPost('efree')">投稿</button>
-            <div id="efree-posts" class="posts"></div>
-        </div>
-
-        <!--物質工学科-->
-        <div id="c" class="page">
-            <h2>物質工学科ページ</h2>
-            <nav>
-                <a href="#/ctest" data-link>テスト情報</a><br>
-                <a href="#/cfree" data-link>自由報告欄</a><br>
-            </nav>
-        </div>
-
-        <div id="ctest" class="page">
-            <h2>テスト情報</h2>
-            <nav><a href="#/c" data-link>戻る</a><br></nav>
-            <p>8月4日　コミュ、物化Ⅱ</p>
-            <textarea id="ctest-input" placeholder="ここに書き込んでください"></textarea>
-            <button onclick="addPost('ctest')">投稿</button>
-            <div id="ctest-posts" class="posts"></div>
-        </div>
-
-        <div id="cfree" class="page">
-            <h2>自由報告欄</h2>
-            <nav><a href="#/c" data-link>戻る</a><br></nav>
-            <p>いろんな情報を共有しあいましょう！</p>
-            <textarea id="cfree-input" placeholder="ここに書き込んでください"></textarea>
-            <button onclick="addPost('cfree')">投稿</button>
-            <div id="cfree-posts" class="posts"></div>
-        </div>
-    </div>
-
-    <script>
-        // ページ切り替え処理
-        window.addEventListener('load', router);
-        window.addEventListener('hashchange', router);
-
-        function router() {
-            const hash = location.hash.replace("#/", "") || "home";
-            document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
-            const page = document.getElementById(hash) || document.getElementById("home");
-            page.classList.add("active");
-        }
-    </script>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, query, orderBy } 
-            from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
-
-        // 🔹 Firebase設定
-        const firebaseConfig = {
-            apiKey: "AIzaSyC2FOiD7rvmd8hwPEt7YWlULmc9mnE0TC4",
-            authDomain: "my-bbs-9ef4c.firebaseapp.com",
-            projectId: "my-bbs-9ef4c",
-            storageBucket: "my-bbs-9ef4c.firebasestorage.app",
-            messagingSenderId: "813682728076",
-            appId: "1:813682728076:web:f17de67cd4d2cdc4dcafa9"
-        };
-
-        // 🔹 Firebase初期化
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
-        // 🔹 投稿処理
-        async function addPost(pageId) {
-            const input = document.getElementById(`${pageId}-input`);
-            const text = input.value;
-            if (!text) return;
-
-            await addDoc(collection(db, pageId), {
-                text: text,
-                time: Date.now()
-            });
-            input.value = "";
-            location.reload(); // ← シンプルにリロードで最新表示
-        }
-        window.addPost = addPost; // ← HTMLのonclickから呼べるように公開
-
-        // 🔹 投稿読み込み
-        async function loadPosts(pageId) {
-            const list = document.getElementById(`${pageId}-posts`);
-            if (!list) return;
-
-            const q = query(collection(db, pageId), orderBy("time", "desc"));
-            const snapshot = await getDocs(q);
-
-            list.innerHTML = "";
-            snapshot.forEach(doc => {
-                const div = document.createElement("div");
-                div.textContent = doc.data().text;
-                list.appendChild(div);
-            });
-        }
-
-        // 🔹 ページごとに投稿を読み込む
-        ["stest","sfree","mtest","mfree","etest","efree","ctest","cfree"].forEach(loadPosts);
-    </script>
-
-    <ul>
-        <script>alert('佐世保高専の掲示板です！')</script>
-    </ul>
-    <div>
-        <button class="btn">Light</button>
-    </div>
-    <script src="script.js"></script>
-    <noscript>You need to enable JavaScript to view the full site.</noscript>
+  <script src="script.js"></script>
 </body>
 </html>
