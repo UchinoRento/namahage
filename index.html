@@ -4,20 +4,42 @@
   <meta charset="UTF-8">
   <title>佐世保高専 掲示板</title>
   <link rel="stylesheet" href="style.css">
+
+  <!-- ✅ Firebase SDK 読み込み -->
+  <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js"></script>
+
+  <script>
+    // 🔑 Firebase 設定（自分の値に置き換える）
+    const firebaseConfig = {
+      apiKey: "自分のAPIキー",
+      authDomain: "xxxx.firebaseapp.com",
+      projectId: "xxxx",
+      storageBucket: "xxxx.appspot.com",
+      messagingSenderId: "xxxx",
+      appId: "xxxx"
+    };
+
+    // 初期化
+    const app = firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+  </script>
 </head>
 <body class="dark-theme">
   <!-- 🔑 ログイン / 新規登録 -->
   <div id="login-section">
     <h2>ログイン</h2>
     <form id="login-form">
-      <input id="login-username" type="text" placeholder="ユーザー名" required>
+      <input id="login-email" type="email" placeholder="メールアドレス" required>
       <input id="login-password" type="password" placeholder="パスワード" required>
       <button type="submit">ログイン</button>
     </form>
 
     <h3>新規登録</h3>
     <form id="register-form">
-      <input id="register-username" type="text" placeholder="ユーザー名" required>
+      <input id="register-email" type="email" placeholder="メールアドレス" required>
       <input id="register-password" type="password" placeholder="パスワード" required>
       <button type="submit">登録</button>
     </form>
@@ -77,6 +99,79 @@
   <!-- 🌙 ダークモード切り替え -->
   <button class="btn">Light</button>
 
-  <script src="script.js"></script>
+  <script>
+    // ===== ログイン処理 =====
+    document.getElementById("login-form").addEventListener("submit", e => {
+      e.preventDefault();
+      const email = document.getElementById("login-email").value;
+      const pass = document.getElementById("login-password").value;
+      auth.signInWithEmailAndPassword(email, pass)
+        .then(user => {
+          document.getElementById("login-section").style.display = "none";
+          document.getElementById("logout-section").style.display = "block";
+          document.getElementById("username-display").textContent = email;
+        })
+        .catch(err => alert(err.message));
+    });
+
+    // 新規登録
+    document.getElementById("register-form").addEventListener("submit", e => {
+      e.preventDefault();
+      const email = document.getElementById("register-email").value;
+      const pass = document.getElementById("register-password").value;
+      auth.createUserWithEmailAndPassword(email, pass)
+        .then(user => alert("登録完了"))
+        .catch(err => alert(err.message));
+    });
+
+    // ログアウト
+    document.getElementById("logout-btn").addEventListener("click", () => {
+      auth.signOut();
+      document.getElementById("login-section").style.display = "block";
+      document.getElementById("logout-section").style.display = "none";
+    });
+
+    // ===== 投稿処理 =====
+    function addPost(pageId) {
+      const input = document.getElementById(pageId + "-input");
+      const text = input.value.trim();
+      const user = auth.currentUser;
+
+      if (!user) {
+        alert("ログインしてください");
+        return;
+      }
+      if (text === "") return;
+
+      db.collection("posts").add({
+        page: pageId,
+        text: text,
+        uid: user.uid,
+        email: user.email,
+        createdAt: new Date()
+      });
+      input.value = "";
+    }
+
+    // ===== 投稿のリアルタイム表示 =====
+    function loadPosts(pageId) {
+      db.collection("posts")
+        .where("page", "==", pageId)
+        .orderBy("createdAt", "desc")
+        .onSnapshot(snapshot => {
+          const container = document.getElementById(pageId + "-posts");
+          container.innerHTML = "";
+          snapshot.forEach(doc => {
+            const data = doc.data();
+            const div = document.createElement("div");
+            div.className = "post";
+            div.textContent = `${data.email}: ${data.text}`;
+            container.appendChild(div);
+          });
+        });
+    }
+
+    ["home","s","m","e","c"].forEach(loadPosts);
+  </script>
 </body>
 </html>
