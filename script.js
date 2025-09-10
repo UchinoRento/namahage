@@ -1,8 +1,9 @@
 'use strict';
 
-// ===== 疑似ユーザー管理（ローカル） =====
-let currentUser = null; // ログイン中ユーザー
-const users = []; // {email, password}
+// ===== ログイン情報・投稿をlocalStorageに保存 =====
+let currentUser = null;
+let users = JSON.parse(localStorage.getItem('users') || '[]');
+let posts = JSON.parse(localStorage.getItem('posts') || '{"home":[],"s":[],"m":[],"e":[],"c":[]}');
 
 // ===== テーマ切替 =====
 const switcher = document.querySelector('.btn');
@@ -24,26 +25,27 @@ function router() {
 window.addEventListener('load', router);
 window.addEventListener('hashchange', router);
 
-// ===== 登録（ローカル） =====
+// ===== 登録 =====
 document.getElementById('register-form').addEventListener('submit', e => {
   e.preventDefault();
-  const email = document.getElementById('register-email').value;
-  const pass = document.getElementById('register-password').value;
+  const email = document.getElementById('register-email').value.trim();
+  const pass = document.getElementById('register-password').value.trim();
 
   if (users.find(u => u.email === email)) {
     alert('このメールアドレスは既に登録されています');
     return;
   }
   users.push({ email, password: pass });
+  localStorage.setItem('users', JSON.stringify(users));
   alert('登録完了！ログインしてください');
   document.getElementById('register-form').reset();
 });
 
-// ===== ログイン（ローカル） =====
+// ===== ログイン =====
 document.getElementById('login-form').addEventListener('submit', e => {
   e.preventDefault();
-  const email = document.getElementById('login-email').value;
-  const pass = document.getElementById('login-password').value;
+  const email = document.getElementById('login-email').value.trim();
+  const pass = document.getElementById('login-password').value.trim();
 
   const user = users.find(u => u.email === email && u.password === pass);
   if (user) {
@@ -55,7 +57,7 @@ document.getElementById('login-form').addEventListener('submit', e => {
   }
 });
 
-// ===== ログアウト（ローカル） =====
+// ===== ログアウト =====
 document.getElementById('logout-btn').addEventListener('click', () => {
   currentUser = null;
   updateAuthUI(null);
@@ -73,9 +75,7 @@ function updateAuthUI(user) {
   }
 }
 
-// ===== 投稿（ローカル） =====
-const posts = { home: [], s: [], m: [], e: [], c: [] };
-
+// ===== 投稿追加 =====
 window.addPost = function (pageId) {
   const input = document.getElementById(pageId + '-input');
   const text = input.value.trim();
@@ -86,11 +86,12 @@ window.addPost = function (pageId) {
   if (!text) return;
 
   posts[pageId].unshift({ email: currentUser.email, text });
+  localStorage.setItem('posts', JSON.stringify(posts));
   renderPosts(pageId);
   input.value = '';
 };
 
-// ===== 投稿描画（ローカル） =====
+// ===== 投稿描画 =====
 function renderPosts(pageId) {
   const container = document.getElementById(pageId + '-posts');
   container.innerHTML = '';
@@ -102,6 +103,5 @@ function renderPosts(pageId) {
   });
 }
 
-// 初期表示用
+// ページ読み込み時に全部描画
 ['home', 's', 'm', 'e', 'c'].forEach(renderPosts);
-
