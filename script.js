@@ -1,6 +1,6 @@
 'use strict';
 
-// 🎨 テーマ切り替え
+// 🎨 テーマ切替
 const switcher = document.querySelector('.btn');
 switcher.addEventListener('click', function() {
   document.body.classList.toggle('light-theme');
@@ -12,131 +12,105 @@ switcher.addEventListener('click', function() {
 });
 
 // 📌 ルーティング
-const routes = {
-  '/': 'home',
-  '/s': 's',
-  '/m': 'm',
-  '/e': 'e',
-  '/c': 'c'
-};
-
-// 💾 投稿保存/取得
-function getPosts(page) {
-  return JSON.parse(localStorage.getItem(`posts-${page}`) || '[]');
-}
-function savePosts(page, posts) {
-  localStorage.setItem(`posts-${page}`, JSON.stringify(posts));
-}
-
-// ✍ 投稿追加
-function addPost(page) {
-  if (!localStorage.getItem("currentUser")) {
-    alert("ログインしてください！");
-    return;
-  }
-
-  const input = document.getElementById(page + '-input');
-  const text = input.value.trim();
-  if (text === '') return;
-
-  const posts = getPosts(page);
-  posts.unshift({
-    user: localStorage.getItem("currentUser"),
-    text,
-    date: new Date().toLocaleString()
-  });
-  savePosts(page, posts);
-
-  input.value = '';
-  renderPosts(page);
-}
-
-// 🖼 投稿表示
-function renderPosts(page) {
-  const posts = getPosts(page);
-  const container = document.getElementById(page + '-posts');
-  container.innerHTML = '';
-
-  posts.forEach(post => {
-    const div = document.createElement('div');
-    div.className = 'post';
-    div.innerHTML = `<strong>${post.user}</strong> (${post.date})<br>${post.text}`;
-    container.appendChild(div);
-  });
-}
+const routes = { '/': 'home', '/s': 's', '/m': 'm', '/e': 'e', '/c': 'c' };
 
 // 🚦 ページ切替
 function router() {
   const path = location.hash.slice(1) || '/';
   document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
-
   const pageId = routes[path];
   if (pageId) {
     document.getElementById(pageId).classList.add('active');
-    renderPosts(pageId);
   }
 }
 window.addEventListener('load', router);
 window.addEventListener('hashchange', router);
 
-// 🔑 ログイン機能
-function getUsers() {
-  return JSON.parse(localStorage.getItem("users") || "{}");
-}
-function saveUsers(users) {
-  localStorage.setItem("users", JSON.stringify(users));
-}
+// 🔑 Firebase 設定（あなたの値に置き換えてください）
+const firebaseConfig = {
+  apiKey: "AIzaSyDHCpNqhEL-a1sLsU4PpXboaWJ-P_XMwXs",
+  authDomain: "sasasebokosen.firebaseapp.com",
+  projectId: "sasasebokosen",
+  storageBucket: "sasasebokosen.firebasestorage.app",
+  messagingSenderId: "607000741264",
+  appId: "1:607000741264:web:1d3f5c501296e9597b9f15",
+  measurementId: "G-KJHJW3EH4T"
+};
+const app = firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
 
-// 登録
+// ===== ログイン/登録/ログアウト =====
 document.getElementById("register-form").addEventListener("submit", e => {
   e.preventDefault();
-  const username = document.getElementById("register-username").value.trim();
+  const email = document.getElementById("register-email").value.trim();
   const password = document.getElementById("register-password").value;
-
-  if (!username || !password) return;
-
-  const users = getUsers();
-  if (users[username]) {
-    alert("そのユーザー名は既に存在します");
-    return;
-  }
-  users[username] = password;
-  saveUsers(users);
-
-  alert("登録完了！");
+  auth.createUserWithEmailAndPassword(email, password)
+    .then(() => alert("登録完了！"))
+    .catch(err => alert(err.message));
 });
 
-// ログイン
 document.getElementById("login-form").addEventListener("submit", e => {
   e.preventDefault();
-  const username = document.getElementById("login-username").value.trim();
+  const email = document.getElementById("login-email").value.trim();
   const password = document.getElementById("login-password").value;
-
-  const users = getUsers();
-  if (users[username] && users[username] === password) {
-    localStorage.setItem("currentUser", username);
-    updateAuthUI();
-  } else {
-    alert("ユーザー名またはパスワードが違います");
-  }
+  auth.signInWithEmailAndPassword(email, password)
+    .catch(err => alert(err.message));
 });
 
-// ログアウト
 document.getElementById("logout-btn").addEventListener("click", () => {
-  localStorage.removeItem("currentUser");
-  updateAuthUI();
+  auth.signOut();
 });
 
-// UI切替
-function updateAuthUI() {
-  const user = localStorage.getItem("currentUser");
-  if (user) {
+// ===== 認証状態を監視してUI切替 =====
+auth.onAuthStateChanged(user => {
+  if(user) {
     document.getElementById("login-section").style.display = "none";
     document.getElementById("logout-section").style.display = "block";
-    document.getElementById("username-display").textContent = user;
+    document.getElementById("username-display").textContent = user.email;
   } else {
     document.getElementById("login-section").style.display = "block";
     document.getElementById("logout-section").style.display = "none";
   }
+});
+
+// ===== 投稿追加 =====
+function addPost(pageId) {
+  const user = auth.currentUser;
+  if(!user) { alert("ログインしてください"); return; }
+
+  const input = document.getElementById(pageId + "-input");
+  const text = input.value.trim();
+  if(text === "") return;
+
+  db.collection("posts").add({
+    page: pageId,
+    text: text,
+    uid: user.uid,
+    email: user.email,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+  input.value = "";
 }
-window.addEventListener("load", updateAuthUI);
+
+// ===== 投稿リアルタイム表示 =====
+function loadPosts(pageId) {
+  db.collection("posts")
+    .where("page", "==", pageId)
+    .orderBy("createdAt", "desc")
+    .onSnapshot(snapshot => {
+      const container = document.getElementById(pageId + "-posts");
+      container.innerHTML = "";
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const div = document.createElement("div");
+        div.className = "post";
+        div.textContent = `${data.email}: ${data.text}`;
+        container.appendChild(div);
+      });
+    });
+}
+
+// 全ページで投稿を監視
+["home","s","m","e","c"].forEach(loadPosts);
+
