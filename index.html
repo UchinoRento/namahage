@@ -5,18 +5,18 @@
   <title>佐世保高専 掲示板</title>
   <link rel="stylesheet" href="style.css">
 
-  <!-- ✅ Firebase SDK 読み込み -->
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js"></script>
 
   <script>
-    // 🔑 あなたの Firebase 設定
+    // 🔑 Firebase 設定（自分の値に置き換える）
     const firebaseConfig = {
       apiKey: "AIzaSyDHCpNqhEL-a1sLsU4PpXboaWJ-P_XMwXs",
       authDomain: "sasasebokosen.firebaseapp.com",
       projectId: "sasasebokosen",
-      storageBucket: "sasasebokosen.appspot.com",  // ✅ 修正済み
+      storageBucket: "sasasebokosen.firebasestorage.app",
       messagingSenderId: "607000741264",
       appId: "1:607000741264:web:1d3f5c501296e9597b9f15",
       measurementId: "G-KJHJW3EH4T"
@@ -29,7 +29,7 @@
   </script>
 </head>
 <body class="dark-theme">
-  <!-- 🔑 ログイン / 新規登録 -->
+  <!-- ログイン / 新規登録 -->
   <div id="login-section">
     <h2>ログイン</h2>
     <form id="login-form">
@@ -46,13 +46,13 @@
     </form>
   </div>
 
-  <!-- 👤 ログイン後表示 -->
+  <!-- ログイン後表示 -->
   <div id="logout-section" style="display:none;">
     <p>ログイン中: <span id="username-display"></span></p>
     <button id="logout-btn">ログアウト</button>
   </div>
 
-  <!-- 🔗 ナビゲーション -->
+  <!-- ナビゲーション -->
   <nav>
     <a href="#/" data-link>ホーム</a> |
     <a href="#/s" data-link>電子制御</a> |
@@ -61,7 +61,7 @@
     <a href="#/c" data-link>物質</a>
   </nav>
 
-  <!-- 📄 ページ群 -->
+  <!-- ページ群 -->
   <div id="home" class="page active">
     <h2>ホーム</h2>
     <input id="home-input" type="text" placeholder="投稿を書いてください">
@@ -97,21 +97,50 @@
     <div id="c-posts"></div>
   </div>
 
-  <!-- 🌙 ダークモード切り替え -->
+  <!-- ダークモード切替 -->
   <button class="btn">Light</button>
 
   <script>
-    // ===== ログイン処理 =====
+    'use strict';
+
+    // テーマ切替
+    const switcher = document.querySelector('.btn');
+    switcher.addEventListener('click', function() {
+      document.body.classList.toggle('light-theme');
+      document.body.classList.toggle('dark-theme');
+      const className = document.body.className;
+      this.textContent = className === "light-theme" ? "Dark" : "Light";
+    });
+
+    // ルーティング
+    const routes = { '/': 'home', '/s':'s', '/m':'m', '/e':'e', '/c':'c' };
+    function router() {
+      const path = location.hash.slice(1) || '/';
+      document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+      const pageId = routes[path];
+      if(pageId) document.getElementById(pageId).classList.add('active');
+    }
+    window.addEventListener('load', router);
+    window.addEventListener('hashchange', router);
+
+    // Firebase 認証状態監視
+    auth.onAuthStateChanged(user => {
+      if(user) {
+        document.getElementById("login-section").style.display = "none";
+        document.getElementById("logout-section").style.display = "block";
+        document.getElementById("username-display").textContent = user.email;
+      } else {
+        document.getElementById("login-section").style.display = "block";
+        document.getElementById("logout-section").style.display = "none";
+      }
+    });
+
+    // ログイン
     document.getElementById("login-form").addEventListener("submit", e => {
       e.preventDefault();
       const email = document.getElementById("login-email").value;
       const pass = document.getElementById("login-password").value;
       auth.signInWithEmailAndPassword(email, pass)
-        .then(user => {
-          document.getElementById("login-section").style.display = "none";
-          document.getElementById("logout-section").style.display = "block";
-          document.getElementById("username-display").textContent = email;
-        })
         .catch(err => alert(err.message));
     });
 
@@ -121,32 +150,25 @@
       const email = document.getElementById("register-email").value;
       const pass = document.getElementById("register-password").value;
       auth.createUserWithEmailAndPassword(email, pass)
-        .then(user => alert("登録完了"))
+        .then(() => alert("登録完了"))
         .catch(err => alert(err.message));
     });
 
     // ログアウト
     document.getElementById("logout-btn").addEventListener("click", () => {
       auth.signOut();
-      document.getElementById("login-section").style.display = "block";
-      document.getElementById("logout-section").style.display = "none";
     });
 
-    // ===== 投稿処理 =====
+    // 投稿追加
     function addPost(pageId) {
+      const user = auth.currentUser;
+      if(!user) { alert("ログインしてください"); return; }
       const input = document.getElementById(pageId + "-input");
       const text = input.value.trim();
-      const user = auth.currentUser;
-
-      if (!user) {
-        alert("ログインしてください");
-        return;
-      }
-      if (text === "") return;
-
+      if(text === "") return;
       db.collection("posts").add({
         page: pageId,
-        text: text,
+        text,
         uid: user.uid,
         email: user.email,
         createdAt: new Date()
@@ -154,13 +176,13 @@
       input.value = "";
     }
 
-    // ===== 投稿のリアルタイム表示 =====
+    // 投稿リアルタイム表示
     function loadPosts(pageId) {
       db.collection("posts")
-        .where("page", "==", pageId)
-        .orderBy("createdAt", "desc")
+        .where("page","==",pageId)
+        .orderBy("createdAt","desc")
         .onSnapshot(snapshot => {
-          const container = document.getElementById(pageId + "-posts");
+          const container = document.getElementById(pageId+"-posts");
           container.innerHTML = "";
           snapshot.forEach(doc => {
             const data = doc.data();
@@ -171,8 +193,8 @@
           });
         });
     }
-
     ["home","s","m","e","c"].forEach(loadPosts);
   </script>
 </body>
 </html>
+
