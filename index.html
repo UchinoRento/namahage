@@ -1,87 +1,42 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>佐世保高専 掲示板</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sasebo Kosen BBS</title>
 </head>
-<body class="dark-theme">
-  <!-- 🔑 ログイン / 新規登録 -->
+<body class="light-theme">
+  <!-- ログイン -->
   <div id="login-section">
-    <h2>ログイン</h2>
     <form id="login-form">
-      <input id="login-email" type="email" placeholder="メールアドレス" required>
-      <input id="login-password" type="password" placeholder="パスワード" required>
+      <input type="email" id="login-email" placeholder="メール" required />
+      <input type="password" id="login-password" placeholder="パスワード" required />
       <button type="submit">ログイン</button>
-    </form>
-
-    <h3>新規登録</h3>
-    <form id="register-form">
-      <input id="register-email" type="email" placeholder="メールアドレス" required>
-      <input id="register-password" type="password" placeholder="パスワード" required>
-      <button type="submit">登録</button>
     </form>
   </div>
 
-  <!-- 👤 ログイン後表示 -->
+  <!-- ログアウト -->
   <div id="logout-section" style="display:none;">
-    <p>ログイン中: <span id="username-display"></span></p>
+    <span id="username-display"></span>
     <button id="logout-btn">ログアウト</button>
   </div>
 
-  <!-- 🔗 ナビゲーション -->
-  <nav>
-    <a href="#/" data-link>ホーム</a> |
-    <a href="#/s" data-link>電子制御</a> |
-    <a href="#/m" data-link>機械</a> |
-    <a href="#/e" data-link>電気電子</a> |
-    <a href="#/c" data-link>物質</a>
-  </nav>
+  <!-- 登録 -->
+  <form id="register-form">
+    <input type="email" id="register-email" placeholder="新規登録メール" required />
+    <input type="password" id="register-password" placeholder="パスワード" required />
+    <button type="submit">登録</button>
+  </form>
 
-  <!-- 📄 ページ群 -->
+  <!-- 投稿ページなど -->
   <div id="home" class="page active">
-    <h2>ホーム</h2>
-    <input id="home-input" type="text" placeholder="投稿を書いてください">
+    <input id="home-input" placeholder="投稿内容">
     <button onclick="addPost('home')">投稿</button>
     <div id="home-posts"></div>
   </div>
 
-  <div id="s" class="page">
-    <h2>電子制御工学科</h2>
-    <input id="s-input" type="text" placeholder="投稿を書いてください">
-    <button onclick="addPost('s')">投稿</button>
-    <div id="s-posts"></div>
-  </div>
-
-  <div id="m" class="page">
-    <h2>機械工学科</h2>
-    <input id="m-input" type="text" placeholder="投稿を書いてください">
-    <button onclick="addPost('m')">投稿</button>
-    <div id="m-posts"></div>
-  </div>
-
-  <div id="e" class="page">
-    <h2>電気電子工学科</h2>
-    <input id="e-input" type="text" placeholder="投稿を書いてください">
-    <button onclick="addPost('e')">投稿</button>
-    <div id="e-posts"></div>
-  </div>
-
-  <div id="c" class="page">
-    <h2>物質工学科</h2>
-    <input id="c-input" type="text" placeholder="投稿を書いてください">
-    <button onclick="addPost('c')">投稿</button>
-    <div id="c-posts"></div>
-  </div>
-
-  <!-- 🌙 ダークモード切替 -->
-  <button class="btn">Light</button>
-
-  <script src="script.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js"></script>
-　<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js"></script>
-　<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js"></script>
-　<script type="module" src="./script.js"></script>
-
+  <!-- あなたのscript.jsをモジュールとして読み込む -->
+  <script type="module" src="./script.js"></script>
 </body>
 </html>
+
