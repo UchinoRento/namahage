@@ -1,66 +1,97 @@
-:root{
-    --green: #00FF00;
-    --white: #FFFFFF;
-    --black: #000000;
+/* ログインフォーム */
+#login-section, #logout-section {
+  margin: 20px auto;
+  padding: 15px;
+  max-width: 400px;
+  border: 1px solid var(--fontColor);
+  border-radius: 8px;
+  background: rgba(255,255,255,0.05);
 }
 
-body {
-    background: var(--bg);
-    color: var(--fontColor);
-    font-family: helvetica;
+/* 入力欄 */
+input[type="text"], input[type="password"] {
+  width: 100%;
+  padding: 8px;
+  margin: 6px 0;
+  border: 1px solid #ccc;
+  border-radius: 6px;
 }
 
-.posts{
+/* ボタン */
+button {
+  padding: 8px 12px;
+  margin-top: 6px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  background: var(--btnBg);
+  color: var(--btnFontColor);
+  font-weight: bold;
+}
+
+button:hover {
+  opacity: 0.8;
+}
+
+/* 投稿リスト */
+.posts {
   margin-top: 10px; 
-  padding:10px; 
-  border: 1px solid #FFFFFF; 
+  padding: 10px; 
+  border: 1px solid var(--fontColor); 
   border-radius: 8px;
   max-height: 250px;
   overflow-y: auto; 
-  }
+}
+
 .post { 
   padding: 6px;
   border-bottom: 1px solid #ddd; 
   white-space: pre-wrap;
-  } 
-.post:last-child { border-bottom: none; } 
-textarea { width: 100%; padding: 6px; border-radius: 6px; } 
+} 
+.post:last-child { 
+  border-bottom: none; 
+} 
 
-li {
-    list-style: circle;
-  }
-  
-.list {
-    list-style: square;
-  }
-  
+textarea { 
+  width: 100%; 
+  padding: 6px; 
+  border-radius: 6px; 
+} 
+
+/* ダーク・ライトテーマ */
 .light-theme {
-    --bg: var(--white);
-    --fontColor: var(--black);
-    --btnBg: var(--black);
-    --btnFontColor: var(--white);
-  }
-.dark-theme{
-    --bg: var(--black);
-    --fontColor: var(--white);
-    --btnBg: var(--white);
-    --btnFontColor: var(--black);
+  --bg: var(--white);
+  --fontColor: var(--black);
+  --btnBg: var(--black);
+  --btnFontColor: var(--white);
 }
-.btn{
-    position: absolute;
-    top: 20px;
-    left: 350px;
-    height: 50px;
-    width: 50px;
-    border-radius: 50%;
-    border: none;
-    color: var(--btnFontColor);
-    background-color: var(--btnBg);
+.dark-theme {
+  --bg: var(--black);
+  --fontColor: var(--white);
+  --btnBg: var(--white);
+  --btnFontColor: var(--black);
 }
 
-.page{
-  display : none;
+/* テーマ切替ボタン（右上固定） */
+.btn {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  height: 45px;
+  width: 45px;
+  border-radius: 50%;
+  border: none;
+  color: var(--btnFontColor);
+  background-color: var(--btnBg);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  cursor: pointer;
 }
-.page.active{
-  display:block;
+
+/* ページ切替 */
+.page {
+  display: none;
 }
+.page.active {
+  display: block;
+}
+
