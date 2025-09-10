@@ -1,97 +1,181 @@
-/* ログインフォーム */
-#login-section, #logout-section {
-  margin: 20px auto;
-  padding: 15px;
-  max-width: 400px;
-  border: 1px solid var(--fontColor);
-  border-radius: 8px;
-  background: rgba(255,255,255,0.05);
+/* グローバル変数 */
+:root {
+    --white: #ffffff;
+    --black: #1a1a1a;
+    --gray-light: #f5f5f5;
+    --gray-dark: #333333;
+    --blue: #007bff;
+}
+
+/* ライトテーマとダークテーマの変数定義 */
+.light-theme {
+    --bg: var(--gray-light);
+    --fontColor: var(--black);
+    --cardBg: var(--white);
+    --inputBg: var(--white);
+    --btnBg: var(--black);
+    --btnFontColor: var(--white);
+    --borderColor: #e0e0e0;
+}
+.dark-theme {
+    --bg: var(--black);
+    --fontColor: var(--white);
+    --cardBg: #222222;
+    --inputBg: #333333;
+    --btnBg: var(--white);
+    --btnFontColor: var(--black);
+    --borderColor: #444444;
+}
+
+/* 全体スタイル */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: var(--bg);
+    color: var(--fontColor);
+    transition: background-color 0.3s, color 0.3s;
+    padding: 20px;
+}
+
+h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 15px;
+    color: var(--fontColor);
+}
+
+/* ログイン/ログアウトセクション */
+#login-section, #logout-section, .page {
+    margin: 20px auto;
+    padding: 20px;
+    max-width: 600px;
+    border: 1px solid var(--borderColor);
+    border-radius: 8px;
+    background-color: var(--cardBg);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
+}
+
+/* フォーム */
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
 /* 入力欄 */
-input[type="text"], input[type="password"] {
-  width: 100%;
-  padding: 8px;
-  margin: 6px 0;
-  border: 1px solid #ccc;
-  border-radius: 6px;
+input[type="text"], input[type="password"], textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--borderColor);
+    border-radius: 6px;
+    background-color: var(--inputBg);
+    color: var(--fontColor);
+    transition: border-color 0.3s, background-color 0.3s;
+}
+input[type="text"]:focus, input[type="password"]:focus, textarea:focus {
+    outline: none;
+    border-color: var(--blue);
+}
+/* プレースホルダーの色 */
+::placeholder {
+    color: #888;
+}
+.dark-theme ::placeholder {
+    color: #aaa;
 }
 
 /* ボタン */
 button {
-  padding: 8px 12px;
-  margin-top: 6px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  background: var(--btnBg);
-  color: var(--btnFontColor);
-  font-weight: bold;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    background-color: var(--btnBg);
+    color: var(--btnFontColor);
+    font-weight: bold;
+    transition: background-color 0.2s, opacity 0.2s;
 }
-
 button:hover {
-  opacity: 0.8;
+    opacity: 0.9;
 }
 
-/* 投稿リスト */
-.posts {
-  margin-top: 10px; 
-  padding: 10px; 
-  border: 1px solid var(--fontColor); 
-  border-radius: 8px;
-  max-height: 250px;
-  overflow-y: auto; 
+/* ナビゲーション */
+nav {
+    text-align: center;
+    margin-top: 20px;
 }
-
-.post { 
-  padding: 6px;
-  border-bottom: 1px solid #ddd; 
-  white-space: pre-wrap;
-} 
-.post:last-child { 
-  border-bottom: none; 
-} 
-
-textarea { 
-  width: 100%; 
-  padding: 6px; 
-  border-radius: 6px; 
-} 
-
-/* ダーク・ライトテーマ */
-.light-theme {
-  --bg: var(--white);
-  --fontColor: var(--black);
-  --btnBg: var(--black);
-  --btnFontColor: var(--white);
+nav a {
+    text-decoration: none;
+    color: var(--fontColor);
+    padding: 10px 15px;
+    border-radius: 6px;
+    font-weight: 500;
+    transition: color 0.2s, background-color 0.2s;
 }
-.dark-theme {
-  --bg: var(--black);
-  --fontColor: var(--white);
-  --btnBg: var(--white);
-  --btnFontColor: var(--black);
+nav a:hover {
+    background-color: rgba(255, 255, 255, 0.1);
 }
-
-/* テーマ切替ボタン（右上固定） */
-.btn {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  height: 45px;
-  width: 45px;
-  border-radius: 50%;
-  border: none;
-  color: var(--btnFontColor);
-  background-color: var(--btnBg);
-  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-  cursor: pointer;
+nav a.active-nav {
+    font-weight: bold;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    text-decoration-thickness: 2px;
+}
+.dark-theme nav a:hover {
+    background-color: rgba(255, 255, 255, 0.05);
 }
 
 /* ページ切替 */
 .page {
-  display: none;
+    display: none;
 }
 .page.active {
-  display: block;
+    display: block;
 }
 
+/* 投稿リスト */
+.posts-container {
+    margin-top: 20px;
+    padding: 15px;
+    border: 1px solid var(--borderColor);
+    border-radius: 8px;
+    background-color: var(--cardBg);
+    max-height: 400px;
+    overflow-y: auto;
+}
+.post {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--borderColor);
+}
+.post:last-child {
+    border-bottom: none;
+}
+.post-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9em;
+    color: #999;
+    margin-bottom: 5px;
+}
+.dark-theme .post-header {
+    color: #aaa;
+}
+.post-content {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+/* テーマ切替ボタン */
+.btn {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    height: 45px;
+    width: 45px;
+    border-radius: 50%;
+    border: none;
+    color: var(--btnFontColor);
+    background-color: var(--btnBg);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    cursor: pointer;
+}
