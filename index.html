@@ -11,7 +11,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js"></script>
 
   <script>
-    // 🔑 Firebase 設定（自分の値に置き換える）
+    // Firebase 設定
     const firebaseConfig = {
       apiKey: "AIzaSyDHCpNqhEL-a1sLsU4PpXboaWJ-P_XMwXs",
       authDomain: "sasasebokosen.firebaseapp.com",
@@ -21,14 +21,13 @@
       appId: "1:607000741264:web:1d3f5c501296e9597b9f15",
       measurementId: "G-KJHJW3EH4T"
     };
-
-    // 初期化
-    const app = firebase.initializeApp(firebaseConfig);
+    firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
   </script>
 </head>
 <body class="dark-theme">
+
   <!-- ログイン / 新規登録 -->
   <div id="login-section">
     <h2>ログイン</h2>
@@ -46,13 +45,13 @@
     </form>
   </div>
 
-  <!-- ログイン後表示 -->
+  <!-- ログイン後 -->
   <div id="logout-section" style="display:none;">
     <p>ログイン中: <span id="username-display"></span></p>
     <button id="logout-btn">ログアウト</button>
   </div>
 
-  <!-- ナビゲーション -->
+  <!-- ナビ -->
   <nav>
     <a href="#/" data-link>ホーム</a> |
     <a href="#/s" data-link>電子制御</a> |
@@ -61,7 +60,7 @@
     <a href="#/c" data-link>物質</a>
   </nav>
 
-  <!-- ページ群 -->
+  <!-- ページ -->
   <div id="home" class="page active">
     <h2>ホーム</h2>
     <input id="home-input" type="text" placeholder="投稿を書いてください">
@@ -108,12 +107,11 @@
     switcher.addEventListener('click', function() {
       document.body.classList.toggle('light-theme');
       document.body.classList.toggle('dark-theme');
-      const className = document.body.className;
-      this.textContent = className === "light-theme" ? "Dark" : "Light";
+      this.textContent = document.body.className === "light-theme" ? "Dark" : "Light";
     });
 
     // ルーティング
-    const routes = { '/': 'home', '/s':'s', '/m':'m', '/e':'e', '/c':'c' };
+    const routes = { '/': 'home', '/s': 's', '/m': 'm', '/e': 'e', '/c': 'c' };
     function router() {
       const path = location.hash.slice(1) || '/';
       document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
@@ -123,9 +121,31 @@
     window.addEventListener('load', router);
     window.addEventListener('hashchange', router);
 
-    // Firebase 認証状態監視
+    // 登録
+    document.getElementById("register-form").addEventListener("submit", e => {
+      e.preventDefault();
+      const email = document.getElementById("register-email").value.trim();
+      const password = document.getElementById("register-password").value;
+      auth.createUserWithEmailAndPassword(email, password)
+        .then(() => alert("登録完了！"))
+        .catch(err => alert(err.message));
+    });
+
+    // ログイン
+    document.getElementById("login-form").addEventListener("submit", e => {
+      e.preventDefault();
+      const email = document.getElementById("login-email").value.trim();
+      const password = document.getElementById("login-password").value;
+      auth.signInWithEmailAndPassword(email, password)
+        .catch(err => alert(err.message));
+    });
+
+    // ログアウト
+    document.getElementById("logout-btn").addEventListener("click", () => auth.signOut());
+
+    // 認証状態監視
     auth.onAuthStateChanged(user => {
-      if(user) {
+      if(user){
         document.getElementById("login-section").style.display = "none";
         document.getElementById("logout-section").style.display = "block";
         document.getElementById("username-display").textContent = user.email;
@@ -135,54 +155,31 @@
       }
     });
 
-    // ログイン
-    document.getElementById("login-form").addEventListener("submit", e => {
-      e.preventDefault();
-      const email = document.getElementById("login-email").value;
-      const pass = document.getElementById("login-password").value;
-      auth.signInWithEmailAndPassword(email, pass)
-        .catch(err => alert(err.message));
-    });
-
-    // 新規登録
-    document.getElementById("register-form").addEventListener("submit", e => {
-      e.preventDefault();
-      const email = document.getElementById("register-email").value;
-      const pass = document.getElementById("register-password").value;
-      auth.createUserWithEmailAndPassword(email, pass)
-        .then(() => alert("登録完了"))
-        .catch(err => alert(err.message));
-    });
-
-    // ログアウト
-    document.getElementById("logout-btn").addEventListener("click", () => {
-      auth.signOut();
-    });
-
-    // 投稿追加
-    function addPost(pageId) {
+    // 投稿
+    function addPost(pageId){
       const user = auth.currentUser;
-      if(!user) { alert("ログインしてください"); return; }
-      const input = document.getElementById(pageId + "-input");
+      if(!user){ alert("ログインしてください"); return; }
+      const input = document.getElementById(pageId+"-input");
       const text = input.value.trim();
-      if(text === "") return;
+      if(text==="") return;
+
       db.collection("posts").add({
         page: pageId,
-        text,
+        text: text,
         uid: user.uid,
         email: user.email,
-        createdAt: new Date()
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
       input.value = "";
     }
 
-    // 投稿リアルタイム表示
-    function loadPosts(pageId) {
+    // 投稿表示
+    function loadPosts(pageId){
       db.collection("posts")
-        .where("page","==",pageId)
-        .orderBy("createdAt","desc")
+        .where("page", "==", pageId)
+        .orderBy("createdAt", "desc")
         .onSnapshot(snapshot => {
-          const container = document.getElementById(pageId+"-posts");
+          const container = document.getElementById(pageId + "-posts");
           container.innerHTML = "";
           snapshot.forEach(doc => {
             const data = doc.data();
@@ -193,8 +190,8 @@
           });
         });
     }
+
     ["home","s","m","e","c"].forEach(loadPosts);
   </script>
 </body>
 </html>
-
