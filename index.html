@@ -28,15 +28,118 @@
     <button type="submit">登録</button>
   </form>
 
-  <!-- 投稿ページなど -->
-  <div id="home" class="page active">
+  <!-- 投稿ページ -->
+  <div id="home" class="page active" style="display:none;">
     <input id="home-input" placeholder="投稿内容">
-    <button onclick="addPost('home')">投稿</button>
+    <button id="post-btn">投稿</button>
     <div id="home-posts"></div>
   </div>
 
-  <!-- あなたのscript.jsをモジュールとして読み込む -->
-  <script type="module" src="./script.js"></script>
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import { 
+      getAuth, onAuthStateChanged,
+      signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword
+    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+    import { 
+      getFirestore, collection, addDoc, getDocs, query, orderBy, serverTimestamp 
+    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+    // ★自分のFirebaseプロジェクトの設定に置き換えてください
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // UI要素
+    const loginSection = document.getElementById("login-section");
+    const logoutSection = document.getElementById("logout-section");
+    const usernameDisplay = document.getElementById("username-display");
+    const homePage = document.getElementById("home");
+    const postsDiv = document.getElementById("home-posts");
+
+    // ログイン処理
+    document.getElementById("login-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = document.getElementById("login-email").value;
+      const password = document.getElementById("login-password").value;
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+      } catch (err) {
+        alert("ログイン失敗: " + err.message);
+      }
+    });
+
+    // 登録処理
+    document.getElementById("register-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = document.getElementById("register-email").value;
+      const password = document.getElementById("register-password").value;
+      try {
+        await createUserWithEmailAndPassword(auth, email, password);
+        alert("登録成功！ログインしてください");
+      } catch (err) {
+        alert("登録失敗: " + err.message);
+      }
+    });
+
+    // ログアウト処理
+    document.getElementById("logout-btn").addEventListener("click", async () => {
+      await signOut(auth);
+    });
+
+    // 投稿処理
+    document.getElementById("post-btn").addEventListener("click", async () => {
+      const text = document.getElementById("home-input").value;
+      if (!text) return;
+      try {
+        await addDoc(collection(db, "posts"), {
+          text,
+          uid: auth.currentUser.uid,
+          createdAt: serverTimestamp()
+        });
+        document.getElementById("home-input").value = "";
+        loadPosts();
+      } catch (err) {
+        alert("投稿失敗: " + err.message);
+      }
+    });
+
+    // 投稿を読み込む
+    async function loadPosts() {
+      postsDiv.innerHTML = "";
+      const q = query(collection(db, "posts"), orderBy("createdAt", "desc"));
+      const snapshot = await getDocs(q);
+      snapshot.forEach(doc => {
+        const p = document.createElement("p");
+        p.textContent = doc.data().text;
+        postsDiv.appendChild(p);
+      });
+    }
+
+    // 認証状態監視
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        loginSection.style.display = "none";
+        logoutSection.style.display = "block";
+        homePage.style.display = "block";
+        usernameDisplay.textContent = "ログイン中: " + user.email;
+        loadPosts();
+      } else {
+        loginSection.style.display = "block";
+        logoutSection.style.display = "none";
+        homePage.style.display = "none";
+      }
+    });
+  </script>
 </body>
 </html>
-
