@@ -1,102 +1,82 @@
-// ==== Firebase SDK (ES Module) ====
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
-import { getAuth, onAuthStateChanged,
-         createUserWithEmailAndPassword,
-         signInWithEmailAndPassword,
-         signOut } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>佐世保高専 掲示板</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="dark-theme">
+  <!-- 🔑 ログイン / 新規登録 -->
+  <div id="login-section">
+    <h2>ログイン</h2>
+    <form id="login-form">
+      <input id="login-email" type="email" placeholder="メールアドレス" required>
+      <input id="login-password" type="password" placeholder="パスワード" required>
+      <button type="submit">ログイン</button>
+    </form>
 
-// Firebaseの設定
-const firebaseConfig = {
-  apiKey: "AIzaSyA35XTaIV6AHBLCWAcNXuqtQ9_-sF7S6ds",
-  authDomain: "sasebokosenbbs.firebaseapp.com",
-  projectId: "sasebokosenbbs",
-  storageBucket: "sasebokosenbbs.firebasestorage.app",
-  messagingSenderId: "883542260106",
-  appId: "1:883542260106:web:dff4d97bf466e62d06b073",
-  measurementId: "G-XHB75WQR6W"
-};
+    <h3>新規登録</h3>
+    <form id="register-form">
+      <input id="register-email" type="email" placeholder="メールアドレス" required>
+      <input id="register-password" type="password" placeholder="パスワード" required>
+      <button type="submit">登録</button>
+    </form>
+  </div>
 
-// Firebase 初期化
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
+  <!-- 👤 ログイン後表示 -->
+  <div id="logout-section" style="display:none;">
+    <p>ログイン中: <span id="username-display"></span></p>
+    <button id="logout-btn">ログアウト</button>
+  </div>
 
-// ==== ログイン状態監視 ====
-onAuthStateChanged(auth, user => {
-  updateAuthUI(user);
-});
+  <!-- 🔗 ナビゲーション -->
+  <nav>
+    <a href="#/" data-link>ホーム</a> |
+    <a href="#/s" data-link>電子制御</a> |
+    <a href="#/m" data-link>機械</a> |
+    <a href="#/e" data-link>電気電子</a> |
+    <a href="#/c" data-link>物質</a>
+  </nav>
 
-// ==== 登録 ====
-document.getElementById('register-form').addEventListener('submit', async e => {
-  e.preventDefault();
-  const email = document.getElementById('register-email').value.trim();
-  const pass = document.getElementById('register-password').value.trim();
-  try {
-    await createUserWithEmailAndPassword(auth, email, pass);
-    alert('登録完了！ログインしました');
-  } catch (err) {
-    alert(err.message);
-  }
-});
+  <!-- 📄 ページ群 -->
+  <div id="home" class="page active">
+    <h2>ホーム</h2>
+    <input id="home-input" type="text" placeholder="投稿を書いてください">
+    <button onclick="addPost('home')">投稿</button>
+    <div id="home-posts"></div>
+  </div>
 
-// ==== ログイン ====
-document.getElementById('login-form').addEventListener('submit', async e => {
-  e.preventDefault();
-  const email = document.getElementById('login-email').value.trim();
-  const pass = document.getElementById('login-password').value.trim();
-  try {
-    await signInWithEmailAndPassword(auth, email, pass);
-    alert('ログイン成功');
-  } catch (err) {
-    alert(err.message);
-  }
-});
+  <div id="s" class="page">
+    <h2>電子制御工学科</h2>
+    <input id="s-input" type="text" placeholder="投稿を書いてください">
+    <button onclick="addPost('s')">投稿</button>
+    <div id="s-posts"></div>
+  </div>
 
-// ==== ログアウト ====
-document.getElementById('logout-btn').addEventListener('click', async () => {
-  await signOut(auth);
-  alert('ログアウトしました');
-});
+  <div id="m" class="page">
+    <h2>機械工学科</h2>
+    <input id="m-input" type="text" placeholder="投稿を書いてください">
+    <button onclick="addPost('m')">投稿</button>
+    <div id="m-posts"></div>
+  </div>
 
-// ==== UI更新 ====
-function updateAuthUI(user) {
-  if (user) {
-    document.getElementById('login-section').style.display = 'none';
-    document.getElementById('logout-section').style.display = 'block';
-    document.getElementById('username-display').textContent = user.email;
-  } else {
-    document.getElementById('login-section').style.display = 'block';
-    document.getElementById('logout-section').style.display = 'none';
-  }
-}
+  <div id="e" class="page">
+    <h2>電気電子工学科</h2>
+    <input id="e-input" type="text" placeholder="投稿を書いてください">
+    <button onclick="addPost('e')">投稿</button>
+    <div id="e-posts"></div>
+  </div>
 
-// ==== 投稿（例） ====
-window.addPost = function (pageId) {
-  const input = document.getElementById(pageId + '-input');
-  const text = input.value.trim();
-  if (!auth.currentUser) {
-    alert('ログインしてください');
-    return;
-  }
-  if (!text) return;
+  <div id="c" class="page">
+    <h2>物質工学科</h2>
+    <input id="c-input" type="text" placeholder="投稿を書いてください">
+    <button onclick="addPost('c')">投稿</button>
+    <div id="c-posts"></div>
+  </div>
 
-  // ここはまだlocalStorage版のままにしておく（Firestoreに切り替え可）
-  let posts = JSON.parse(localStorage.getItem('posts') || '{"home":[],"s":[],"m":[],"e":[],"c":[]}');
-  posts[pageId].unshift({ email: auth.currentUser.email, text });
-  localStorage.setItem('posts', JSON.stringify(posts));
-  renderPosts(pageId);
-  input.value = '';
-};
+  <!-- 🌙 ダークモード切替 -->
+  <button class="btn">Light</button>
 
-function renderPosts(pageId) {
-  const posts = JSON.parse(localStorage.getItem('posts') || '{"home":[],"s":[],"m":[],"e":[],"c":[]}');
-  const container = document.getElementById(pageId + '-posts');
-  container.innerHTML = '';
-  posts[pageId].forEach(p => {
-    const div = document.createElement('div');
-    div.className = 'post';
-    div.textContent = `${p.email}: ${p.text}`;
-    container.appendChild(div);
-  });
-}
-['home','s','m','e','c'].forEach(renderPosts);
-
+  <script src="script.js"></script>
+</body>
+</html>
