@@ -1,82 +1,107 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <title>佐世保高専 掲示板</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body class="dark-theme">
-  <!-- 🔑 ログイン / 新規登録 -->
-  <div id="login-section">
-    <h2>ログイン</h2>
-    <form id="login-form">
-      <input id="login-email" type="email" placeholder="メールアドレス" required>
-      <input id="login-password" type="password" placeholder="パスワード" required>
-      <button type="submit">ログイン</button>
-    </form>
+'use strict';
 
-    <h3>新規登録</h3>
-    <form id="register-form">
-      <input id="register-email" type="email" placeholder="メールアドレス" required>
-      <input id="register-password" type="password" placeholder="パスワード" required>
-      <button type="submit">登録</button>
-    </form>
-  </div>
+// ===== ログイン情報・投稿をlocalStorageに保存 =====
+let currentUser = null;
+let users = JSON.parse(localStorage.getItem('users') || '[]');
+let posts = JSON.parse(localStorage.getItem('posts') || '{"home":[],"s":[],"m":[],"e":[],"c":[]}');
 
-  <!-- 👤 ログイン後表示 -->
-  <div id="logout-section" style="display:none;">
-    <p>ログイン中: <span id="username-display"></span></p>
-    <button id="logout-btn">ログアウト</button>
-  </div>
+// ===== テーマ切替 =====
+const switcher = document.querySelector('.btn');
+switcher.addEventListener('click', () => {
+  document.body.classList.toggle('light-theme');
+  document.body.classList.toggle('dark-theme');
+  switcher.textContent =
+    document.body.className === 'light-theme' ? 'Dark' : 'Light';
+});
 
-  <!-- 🔗 ナビゲーション -->
-  <nav>
-    <a href="#/" data-link>ホーム</a> |
-    <a href="#/s" data-link>電子制御</a> |
-    <a href="#/m" data-link>機械</a> |
-    <a href="#/e" data-link>電気電子</a> |
-    <a href="#/c" data-link>物質</a>
-  </nav>
+// ===== ページルーティング =====
+const routes = { '/': 'home', '/s': 's', '/m': 'm', '/e': 'e', '/c': 'c' };
+function router() {
+  const path = location.hash.slice(1) || '/';
+  document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+  const pageId = routes[path];
+  if (pageId) document.getElementById(pageId).classList.add('active');
+}
+window.addEventListener('load', router);
+window.addEventListener('hashchange', router);
 
-  <!-- 📄 ページ群 -->
-  <div id="home" class="page active">
-    <h2>ホーム</h2>
-    <input id="home-input" type="text" placeholder="投稿を書いてください">
-    <button onclick="addPost('home')">投稿</button>
-    <div id="home-posts"></div>
-  </div>
+// ===== 登録 =====
+document.getElementById('register-form').addEventListener('submit', e => {
+  e.preventDefault();
+  const email = document.getElementById('register-email').value.trim();
+  const pass = document.getElementById('register-password').value.trim();
 
-  <div id="s" class="page">
-    <h2>電子制御工学科</h2>
-    <input id="s-input" type="text" placeholder="投稿を書いてください">
-    <button onclick="addPost('s')">投稿</button>
-    <div id="s-posts"></div>
-  </div>
+  if (users.find(u => u.email === email)) {
+    alert('このメールアドレスは既に登録されています');
+    return;
+  }
+  users.push({ email, password: pass });
+  localStorage.setItem('users', JSON.stringify(users));
+  alert('登録完了！ログインしてください');
+  document.getElementById('register-form').reset();
+});
 
-  <div id="m" class="page">
-    <h2>機械工学科</h2>
-    <input id="m-input" type="text" placeholder="投稿を書いてください">
-    <button onclick="addPost('m')">投稿</button>
-    <div id="m-posts"></div>
-  </div>
+// ===== ログイン =====
+document.getElementById('login-form').addEventListener('submit', e => {
+  e.preventDefault();
+  const email = document.getElementById('login-email').value.trim();
+  const pass = document.getElementById('login-password').value.trim();
 
-  <div id="e" class="page">
-    <h2>電気電子工学科</h2>
-    <input id="e-input" type="text" placeholder="投稿を書いてください">
-    <button onclick="addPost('e')">投稿</button>
-    <div id="e-posts"></div>
-  </div>
+  const user = users.find(u => u.email === email && u.password === pass);
+  if (user) {
+    currentUser = user;
+    updateAuthUI(currentUser);
+    document.getElementById('login-form').reset();
+  } else {
+    alert('メールアドレスまたはパスワードが違います');
+  }
+});
 
-  <div id="c" class="page">
-    <h2>物質工学科</h2>
-    <input id="c-input" type="text" placeholder="投稿を書いてください">
-    <button onclick="addPost('c')">投稿</button>
-    <div id="c-posts"></div>
-  </div>
+// ===== ログアウト =====
+document.getElementById('logout-btn').addEventListener('click', () => {
+  currentUser = null;
+  updateAuthUI(null);
+});
 
-  <!-- 🌙 ダークモード切替 -->
-  <button class="btn">Light</button>
+// ===== UI更新 =====
+function updateAuthUI(user) {
+  if (user) {
+    document.getElementById('login-section').style.display = 'none';
+    document.getElementById('logout-section').style.display = 'block';
+    document.getElementById('username-display').textContent = user.email;
+  } else {
+    document.getElementById('login-section').style.display = 'block';
+    document.getElementById('logout-section').style.display = 'none';
+  }
+}
 
-  <script src="script.js"></script>
-</body>
-</html>
+// ===== 投稿追加 =====
+window.addPost = function (pageId) {
+  const input = document.getElementById(pageId + '-input');
+  const text = input.value.trim();
+  if (!currentUser) {
+    alert('ログインしてください');
+    return;
+  }
+  if (!text) return;
+
+  posts[pageId].unshift({ email: currentUser.email, text });
+  localStorage.setItem('posts', JSON.stringify(posts));
+  renderPosts(pageId);
+  input.value = '';
+};
+
+// ===== 投稿描画 =====
+function renderPosts(pageId) {
+  const container = document.getElementById(pageId + '-posts');
+  container.innerHTML = '';
+  posts[pageId].forEach(p => {
+    const div = document.createElement('div');
+    div.className = 'post';
+    div.textContent = `${p.email}: ${p.text}`;
+    container.appendChild(div);
+  });
+}
+
+// ページ読み込み時に全部描画
+['home', 's', 'm', 'e', 'c'].forEach(renderPosts);
