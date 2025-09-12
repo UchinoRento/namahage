@@ -4,32 +4,42 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sasebo Kosen BBS</title>
+  <style>
+    body { font-family: sans-serif; background:#f5f5f5; padding:20px; }
+    .card { background:#fff; border-radius:8px; padding:20px; max-width:400px; margin:20px auto; box-shadow:0 2px 5px rgba(0,0,0,.1);}
+    .card h2 { margin-top:0; }
+    .card input { width:100%; padding:8px; margin:6px 0; }
+    .card button { width:100%; padding:8px; margin-top:8px; background:#007bff; color:#fff; border:none; border-radius:4px; cursor:pointer; }
+    .card button:hover { background:#0056b3; }
+    #logout-section {text-align:center; margin-bottom:20px;}
+  </style>
 </head>
-<body class="light-theme">
-  <!-- ログイン -->
-  <div id="login-section">
+<body>
+  <!-- ログインカード -->
+  <div id="login-section" class="card">
+    <h2>ログイン</h2>
     <form id="login-form">
-      <input type="email" id="login-email" placeholder="メール" required />
+      <input type="email" id="login-email" placeholder="メールアドレス" required />
       <input type="password" id="login-password" placeholder="パスワード" required />
       <button type="submit">ログイン</button>
     </form>
+    <hr>
+    <h2>新規登録</h2>
+    <form id="register-form">
+      <input type="email" id="register-email" placeholder="新規登録メール" required />
+      <input type="password" id="register-password" placeholder="パスワード" required />
+      <button type="submit">登録</button>
+    </form>
   </div>
 
-  <!-- ログアウト -->
+  <!-- ログアウト時に表示 -->
   <div id="logout-section" style="display:none;">
-    <span id="username-display"></span>
+    <span id="username-display"></span><br>
     <button id="logout-btn">ログアウト</button>
   </div>
 
-  <!-- 登録 -->
-  <form id="register-form">
-    <input type="email" id="register-email" placeholder="新規登録メール" required />
-    <input type="password" id="register-password" placeholder="パスワード" required />
-    <button type="submit">登録</button>
-  </form>
-
   <!-- 投稿ページ -->
-  <div id="home" class="page active" style="display:none;">
+  <div id="home" style="display:none;">
     <input id="home-input" placeholder="投稿内容">
     <button id="post-btn">投稿</button>
     <div id="home-posts"></div>
@@ -46,7 +56,7 @@
       getFirestore, collection, addDoc, getDocs, query, orderBy, serverTimestamp 
     } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-    // ★自分のFirebaseプロジェクトの設定に置き換えてください
+    // ★自分のFirebaseプロジェクト設定に置き換えてください
     const firebaseConfig = {
       apiKey: "YOUR_API_KEY",
       authDomain: "YOUR_PROJECT.firebaseapp.com",
@@ -60,14 +70,13 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // UI要素
     const loginSection = document.getElementById("login-section");
     const logoutSection = document.getElementById("logout-section");
     const usernameDisplay = document.getElementById("username-display");
     const homePage = document.getElementById("home");
     const postsDiv = document.getElementById("home-posts");
 
-    // ログイン処理
+    // ログイン
     document.getElementById("login-form").addEventListener("submit", async (e) => {
       e.preventDefault();
       const email = document.getElementById("login-email").value;
@@ -79,7 +88,7 @@
       }
     });
 
-    // 登録処理
+    // 登録
     document.getElementById("register-form").addEventListener("submit", async (e) => {
       e.preventDefault();
       const email = document.getElementById("register-email").value;
@@ -92,12 +101,12 @@
       }
     });
 
-    // ログアウト処理
+    // ログアウト
     document.getElementById("logout-btn").addEventListener("click", async () => {
       await signOut(auth);
     });
 
-    // 投稿処理
+    // 投稿
     document.getElementById("post-btn").addEventListener("click", async () => {
       const text = document.getElementById("home-input").value;
       if (!text) return;
@@ -114,7 +123,7 @@
       }
     });
 
-    // 投稿を読み込む
+    // 投稿読み込み
     async function loadPosts() {
       postsDiv.innerHTML = "";
       const q = query(collection(db, "posts"), orderBy("createdAt", "desc"));
