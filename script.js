@@ -1,111 +1,98 @@
-// ===== ユーザーと投稿データ =====
+// ===== SPAルーティング =====
+const routes = { '/':'home','/m':'m','/e':'e','/s':'s','/c':'c' };
+function router() {
+    const path = location.hash.slice(1) || '/';
+    document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
+    const pageId = routes[path];
+    if(pageId) document.getElementById(pageId).classList.add('active');
+}
+window.addEventListener('load', router);
+window.addEventListener('hashchange', router);
+
+// ===== テーマ切替 =====
+document.getElementById('toggleTheme')?.addEventListener('click', ()=>{
+    document.body.classList.toggle('dark-theme');
+});
+
+// ===== ローカル掲示板データ =====
 let users = JSON.parse(localStorage.getItem('users') || '[]');
-let posts = JSON.parse(localStorage.getItem('posts') || '{"home":[]}');
+let posts = JSON.parse(localStorage.getItem('posts') || '{"home":[],"m":[],"e":[],"s":[],"c":[]}');
 let currentUser = null;
 
-// ===== HTML要素取得 =====
-const registerBtn = document.getElementById('registerBtn');
-const loginBtn = document.getElementById('loginBtn');
-const logoutBtn = document.getElementById('logoutBtn');
-const addPostBtn = document.getElementById('addPostBtn');
+// ===== 各学科ページにフォームと投稿欄を追加 =====
+Object.keys(posts).forEach(pageId=>{
+    const pageDiv = document.getElementById(pageId);
+    if(!pageDiv) return;
 
-// ===== イベントリスナー =====
-registerBtn.addEventListener('click', registerUser);
-loginBtn.addEventListener('click', login);
-logoutBtn.addEventListener('click', logout);
-addPostBtn.addEventListener('click', addPost);
+    // 認証フォーム
+    const authDiv = document.createElement('div');
+    authDiv.innerHTML = `
+        <input type="text" id="name_${pageId}" placeholder="名前">
+        <input type="text" id="id_${pageId}" placeholder="学籍番号">
+        <button id="register_${pageId}">登録</button>
+        <button id="login_${pageId}">ログイン</button>
+        <p id="msg_${pageId}"></p>
+    `;
+    pageDiv.appendChild(authDiv);
 
-// ===== メッセージ表示 =====
-function showMessage(msg) {
-    document.getElementById('message').textContent = msg;
-}
+    // 投稿フォーム
+    const postDiv = document.createElement('div');
+    postDiv.innerHTML = `
+        <textarea id="post_${pageId}" placeholder="投稿内容"></textarea><br>
+        <button id="add_${pageId}">投稿</button>
+        <div id="list_${pageId}"></div>
+    `;
+    pageDiv.appendChild(postDiv);
 
-// ===== 登録済みユーザー表示 =====
-function renderUserList() {
-    const list = document.getElementById('userList');
-    list.innerHTML = "";
-    users.forEach(u => {
-        const li = document.createElement('li');
-        li.textContent = `${u.name} (${u.studentId})`;
-        list.appendChild(li);
-    });
-}
+    // イベント登録
+    document.getElementById(`register_${pageId}`).addEventListener('click', ()=>registerUser(pageId));
+    document.getElementById(`login_${pageId}`).addEventListener('click', ()=>login(pageId));
+    document.getElementById(`add_${pageId}`).addEventListener('click', ()=>addPost(pageId));
+
+    renderPosts(pageId);
+});
 
 // ===== 登録 =====
-function registerUser() {
-    const name = document.getElementById('name').value.trim();
-    const studentId = document.getElementById('studentId').value.trim();
-    if(!name || !studentId) {
-        showMessage("名前と学籍番号を入力してください");
-        return;
-    }
-    if(users.find(u => u.studentId === studentId)) {
-        showMessage("この学籍番号は既に登録済みです");
-        return;
-    }
-    users.push({name, studentId});
-    localStorage.setItem('users', JSON.stringify(users));
-    showMessage(`登録完了: ${name} (${studentId})`);
-    renderUserList();
+function registerUser(pageId){
+    const name = document.getElementById(`name_${pageId}`).value.trim();
+    const id = document.getElementById(`id_${pageId}`).value.trim();
+    const msg = document.getElementById(`msg_${pageId}`);
+    if(!name || !id){ msg.textContent="名前と学籍番号を入力"; return; }
+    if(users.find(u=>u.studentId===id)){ msg.textContent="学籍番号は既に登録済"; return; }
+    users.push({name,studentId:id});
+    localStorage.setItem('users',JSON.stringify(users));
+    msg.textContent=`登録完了: ${name}`;
 }
 
 // ===== ログイン =====
-function login() {
-    const studentId = document.getElementById('studentId').value.trim();
-    const user = users.find(u => u.studentId === studentId);
-    if(user) {
-        currentUser = user;
-        document.getElementById('currentUser').textContent = currentUser.name;
-        document.getElementById('auth').style.display = 'none';
-        document.getElementById('board').style.display = 'block';
-        showMessage(`ログイン成功: ${currentUser.name}`);
-        renderPosts();
-    } else {
-        showMessage("ユーザーが見つかりません");
-    }
-}
-
-// ===== ログアウト =====
-function logout() {
-    currentUser = null;
-    document.getElementById('auth').style.display = 'block';
-    document.getElementById('board').style.display = 'none';
-    showMessage("ログアウトしました");
+function login(pageId){
+    const id = document.getElementById(`id_${pageId}`).value.trim();
+    const msg = document.getElementById(`msg_${pageId}`);
+    const user = users.find(u=>u.studentId===id);
+    if(user){ currentUser=user; msg.textContent=`ログイン成功: ${user.name}`; } 
+    else{ msg.textContent="ユーザーが見つかりません"; }
 }
 
 // ===== 投稿追加 =====
-function addPost() {
-    if(!currentUser) {
-        showMessage("ログインしてください");
-        return;
-    }
-    const content = document.getElementById('newPost').value.trim();
-    if(!content) {
-        showMessage("投稿内容を入力してください");
-        return;
-    }
-    posts['home'].push({
-        author: currentUser.name,
-        content,
-        timestamp: new Date().toLocaleString()
-    });
-    localStorage.setItem('posts', JSON.stringify(posts));
-    document.getElementById('newPost').value = "";
-    renderPosts();
-    showMessage("投稿しました");
+function addPost(pageId){
+    if(!currentUser){ alert("ログインしてください"); return; }
+    const content = document.getElementById(`post_${pageId}`).value.trim();
+    if(!content){ alert("投稿内容を入力"); return; }
+    posts[pageId].push({author:currentUser.name,content,timestamp:new Date().toLocaleString()});
+    localStorage.setItem('posts',JSON.stringify(posts));
+    document.getElementById(`post_${pageId}`).value="";
+    renderPosts(pageId);
 }
 
 // ===== 投稿表示 =====
-function renderPosts() {
-    const container = document.getElementById('postContainer');
-    container.innerHTML = "";
-    posts['home'].slice().reverse().forEach(post => {
-        const div = document.createElement('div');
-        div.innerHTML = `<strong>${post.author}</strong> [${post.timestamp}]:<br>${post.content}`;
-        container.appendChild(div);
+function renderPosts(pageId){
+    const listDiv=document.getElementById(`list_${pageId}`);
+    listDiv.innerHTML="";
+    posts[pageId].slice().reverse().forEach(p=>{
+        const d=document.createElement('div');
+        d.className='post';
+        d.innerHTML=`<strong>${p.author}</strong> [${p.timestamp}]:<br>${p.content}`;
+        listDiv.appendChild(d);
     });
 }
-
-// ===== 初期表示 =====
-renderUserList();
 
