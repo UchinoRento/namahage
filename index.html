@@ -3,18 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>学校掲示板（ローカル版・改善版）</title>
+<title>学校掲示板（動作確認版）</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<h1>学校掲示板（ローカル版・改善版）</h1>
+<h1>学校掲示板（動作確認版）</h1>
 
 <div id="auth">
   <h2>ログイン / 登録</h2>
   <input type="text" id="name" placeholder="名前">
   <input type="text" id="studentId" placeholder="学籍番号">
-  <button onclick="registerUser()">登録</button>
-  <button onclick="login()">ログイン</button>
+  <button id="registerBtn">登録</button>
+  <button id="loginBtn">ログイン</button>
 
   <p id="message"></p> <!-- 登録・ログインの結果表示 -->
   <p>登録済みユーザー:</p>
@@ -23,10 +23,10 @@
 
 <div id="board" style="display:none;">
   <p>ログイン中: <span id="currentUser"></span> 
-  <button onclick="logout()">ログアウト</button></p>
+  <button id="logoutBtn">ログアウト</button></p>
 
   <textarea id="newPost" placeholder="ここに投稿"></textarea><br>
-  <button onclick="addPost()">投稿</button>
+  <button id="addPostBtn">投稿</button>
 
   <h2>投稿一覧</h2>
   <div id="postContainer"></div>
