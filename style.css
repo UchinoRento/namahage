@@ -23,3 +23,8 @@ textarea {
     border-radius: 5px;
     box-shadow: 0 0 3px #ccc;
 }
+
+#userList {
+    list-style-type: disc;
+    padding-left: 20px;
+}
