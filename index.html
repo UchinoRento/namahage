@@ -4,151 +4,117 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sasebo Kosen BBS</title>
-  <style>
-    body { font-family: sans-serif; background:#f5f5f5; padding:20px; }
-    .card { background:#fff; border-radius:8px; padding:20px; max-width:400px; margin:20px auto; box-shadow:0 2px 5px rgba(0,0,0,.1);}
-    .card h2 { margin-top:0; }
-    .card input { width:100%; padding:8px; margin:6px 0; }
-    .card button { width:100%; padding:8px; margin-top:8px; background:#007bff; color:#fff; border:none; border-radius:4px; cursor:pointer; }
-    .card button:hover { background:#0056b3; }
-    #logout-section {text-align:center; margin-bottom:20px;}
-  </style>
 </head>
-<body>
-  <!-- ログインカード -->
-  <div id="login-section" class="card">
-    <h2>ログイン</h2>
+<body class="light-theme">
+  <!-- ログイン -->
+  <div id="login-section">
     <form id="login-form">
-      <input type="email" id="login-email" placeholder="メールアドレス" required />
+      <input type="email" id="login-email" placeholder="メール" required />
       <input type="password" id="login-password" placeholder="パスワード" required />
       <button type="submit">ログイン</button>
     </form>
-    <hr>
-    <h2>新規登録</h2>
-    <form id="register-form">
-      <input type="email" id="register-email" placeholder="新規登録メール" required />
-      <input type="password" id="register-password" placeholder="パスワード" required />
-      <button type="submit">登録</button>
-    </form>
   </div>
 
-  <!-- ログアウト時に表示 -->
+  <!-- ログアウト -->
   <div id="logout-section" style="display:none;">
-    <span id="username-display"></span><br>
+    <span id="username-display"></span>
     <button id="logout-btn">ログアウト</button>
   </div>
 
+  <!-- 登録 -->
+  <form id="register-form">
+    <input type="email" id="register-email" placeholder="新規登録メール" required />
+    <input type="password" id="register-password" placeholder="パスワード" required />
+    <button type="submit">登録</button>
+  </form>
+
   <!-- 投稿ページ -->
-  <div id="home" style="display:none;">
+  <div id="home" class="page active" style="display:none;">
     <input id="home-input" placeholder="投稿内容">
     <button id="post-btn">投稿</button>
     <div id="home-posts"></div>
   </div>
 
-  <!-- Firebase SDK -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import { 
-      getAuth, onAuthStateChanged,
-      signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword
-    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-    import { 
-      getFirestore, collection, addDoc, getDocs, query, orderBy, serverTimestamp 
-    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
-
-    // ★自分のFirebaseプロジェクト設定に置き換えてください
-    const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_PROJECT.firebaseapp.com",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_PROJECT.appspot.com",
-      messagingSenderId: "YOUR_SENDER_ID",
-      appId: "YOUR_APP_ID"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-
-    const loginSection = document.getElementById("login-section");
-    const logoutSection = document.getElementById("logout-section");
-    const usernameDisplay = document.getElementById("username-display");
-    const homePage = document.getElementById("home");
-    const postsDiv = document.getElementById("home-posts");
-
-    // ログイン
-    document.getElementById("login-form").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const email = document.getElementById("login-email").value;
-      const password = document.getElementById("login-password").value;
-      try {
-        await signInWithEmailAndPassword(auth, email, password);
-      } catch (err) {
-        alert("ログイン失敗: " + err.message);
-      }
-    });
+  <script>
+    // ===== ローカルだけでログイン情報・投稿を保存 =====
+    let currentUser = null;
+    let users = JSON.parse(localStorage.getItem('users') || '[]');
+    let posts = JSON.parse(localStorage.getItem('posts') || '{"home":[]}');
 
     // 登録
-    document.getElementById("register-form").addEventListener("submit", async (e) => {
+    document.getElementById('register-form').addEventListener('submit', e => {
       e.preventDefault();
-      const email = document.getElementById("register-email").value;
-      const password = document.getElementById("register-password").value;
-      try {
-        await createUserWithEmailAndPassword(auth, email, password);
-        alert("登録成功！ログインしてください");
-      } catch (err) {
-        alert("登録失敗: " + err.message);
+      const email = document.getElementById('register-email').value.trim();
+      const pass = document.getElementById('register-password').value.trim();
+      if (users.find(u => u.email === email)) {
+        alert('このメールアドレスは既に登録されています');
+        return;
+      }
+      users.push({ email, password: pass });
+      localStorage.setItem('users', JSON.stringify(users));
+      alert('登録完了！ログインしてください');
+      document.getElementById('register-form').reset();
+    });
+
+    // ログイン
+    document.getElementById('login-form').addEventListener('submit', e => {
+      e.preventDefault();
+      const email = document.getElementById('login-email').value.trim();
+      const pass = document.getElementById('login-password').value.trim();
+      const user = users.find(u => u.email === email && u.password === pass);
+      if (user) {
+        currentUser = user;
+        updateAuthUI(currentUser);
+        document.getElementById('login-form').reset();
+        loadPosts();
+      } else {
+        alert('メールアドレスまたはパスワードが違います');
       }
     });
 
     // ログアウト
-    document.getElementById("logout-btn").addEventListener("click", async () => {
-      await signOut(auth);
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      currentUser = null;
+      updateAuthUI(null);
     });
 
     // 投稿
-    document.getElementById("post-btn").addEventListener("click", async () => {
-      const text = document.getElementById("home-input").value;
-      if (!text) return;
-      try {
-        await addDoc(collection(db, "posts"), {
-          text,
-          uid: auth.currentUser.uid,
-          createdAt: serverTimestamp()
-        });
-        document.getElementById("home-input").value = "";
-        loadPosts();
-      } catch (err) {
-        alert("投稿失敗: " + err.message);
-      }
+    document.getElementById('post-btn').addEventListener('click', () => {
+      const text = document.getElementById('home-input').value.trim();
+      if (!text || !currentUser) return;
+      posts.home.push({
+        text,
+        email: currentUser.email,
+        created: new Date().toISOString()
+      });
+      localStorage.setItem('posts', JSON.stringify(posts));
+      document.getElementById('home-input').value = '';
+      loadPosts();
     });
 
-    // 投稿読み込み
-    async function loadPosts() {
-      postsDiv.innerHTML = "";
-      const q = query(collection(db, "posts"), orderBy("createdAt", "desc"));
-      const snapshot = await getDocs(q);
-      snapshot.forEach(doc => {
-        const p = document.createElement("p");
-        p.textContent = doc.data().text;
-        postsDiv.appendChild(p);
+    function loadPosts() {
+      const postsDiv = document.getElementById('home-posts');
+      postsDiv.innerHTML = '';
+      posts.home.slice().reverse().forEach(p => {
+        const el = document.createElement('p');
+        el.textContent = `${p.email}: ${p.text}`;
+        postsDiv.appendChild(el);
       });
     }
 
-    // 認証状態監視
-    onAuthStateChanged(auth, (user) => {
+    function updateAuthUI(user) {
       if (user) {
-        loginSection.style.display = "none";
-        logoutSection.style.display = "block";
-        homePage.style.display = "block";
-        usernameDisplay.textContent = "ログイン中: " + user.email;
-        loadPosts();
+        document.getElementById('login-section').style.display = 'none';
+        document.getElementById('logout-section').style.display = 'block';
+        document.getElementById('username-display').textContent = 'ログイン中: ' + user.email;
+        document.getElementById('home').style.display = 'block';
       } else {
-        loginSection.style.display = "block";
-        logoutSection.style.display = "none";
-        homePage.style.display = "none";
+        document.getElementById('login-section').style.display = 'block';
+        document.getElementById('logout-section').style.display = 'none';
+        document.getElementById('home').style.display = 'none';
       }
-    });
+    }
   </script>
 </body>
 </html>
+
