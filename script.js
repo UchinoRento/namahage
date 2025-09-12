@@ -7,12 +7,19 @@ let currentUser = null;
 function registerUser() {
     const name = document.getElementById('name').value.trim();
     const studentId = document.getElementById('studentId').value.trim();
-    if(!name || !studentId) { alert("名前と学籍番号を入力してください"); return; }
-    if(users.find(u => u.studentId === studentId)) { alert("この学籍番号は既に登録済みです"); return; }
+    if(!name || !studentId) { 
+        showMessage("名前と学籍番号を入力してください"); 
+        return; 
+    }
+    if(users.find(u => u.studentId === studentId)) { 
+        showMessage("この学籍番号は既に登録済みです"); 
+        return; 
+    }
 
     users.push({name, studentId});
     localStorage.setItem('users', JSON.stringify(users));
-    alert("登録完了しました");
+    showMessage(`登録完了: ${name} (${studentId})`);
+    renderUserList();
 }
 
 // ===== ログイン =====
@@ -24,9 +31,10 @@ function login() {
         document.getElementById('currentUser').textContent = currentUser.name;
         document.getElementById('auth').style.display = 'none';
         document.getElementById('board').style.display = 'block';
+        showMessage(`ログイン成功: ${currentUser.name}`);
         renderPosts();
     } else {
-        alert("ユーザーが見つかりません");
+        showMessage("ユーザーが見つかりません");
     }
 }
 
@@ -35,18 +43,46 @@ function logout() {
     currentUser = null;
     document.getElementById('auth').style.display = 'block';
     document.getElementById('board').style.display = 'none';
+    showMessage("ログアウトしました");
+}
+
+// ===== メッセージ表示用 =====
+function showMessage(msg) {
+    document.getElementById('message').textContent = msg;
+}
+
+// ===== 登録済みユーザーリスト表示 =====
+function renderUserList() {
+    const list = document.getElementById('userList');
+    list.innerHTML = "";
+    users.forEach(u => {
+        const li = document.createElement('li');
+        li.textContent = `${u.name} (${u.studentId})`;
+        list.appendChild(li);
+    });
 }
 
 // ===== 投稿追加 =====
 function addPost() {
-    if(!currentUser) { alert("ログインしてください"); return; }
+    if(!currentUser) { 
+        showMessage("ログインしてください"); 
+        return; 
+    }
     const content = document.getElementById('newPost').value.trim();
-    if(!content) { alert("投稿内容を入力してください"); return; }
+    if(!content) { 
+        showMessage("投稿内容を入力してください"); 
+        return; 
+    }
 
-    posts['home'].push({author: currentUser.name, content, timestamp: new Date().toLocaleString()});
+    posts['home'].push({
+        author: currentUser.name, 
+        content, 
+        timestamp: new Date().toLocaleString()
+    });
     localStorage.setItem('posts', JSON.stringify(posts));
     document.getElementById('newPost').value = "";
     renderPosts();
+    showMessage("投稿しました");
 }
 
 // ===== 投稿表示 =====
@@ -59,4 +95,8 @@ function renderPosts() {
         container.appendChild(div);
     });
 }
+
+// ===== 初期表示 =====
+renderUserList();
+
 
