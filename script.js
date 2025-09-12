@@ -30,6 +30,7 @@ document.getElementById('login-form').addEventListener('submit', e => {
     currentUser = user;
     updateAuthUI(currentUser);
     document.getElementById('login-form').reset();
+    loadPosts();
   } else {
     alert('メールアドレスまたはパスワードが違います');
   }
@@ -41,15 +42,35 @@ document.getElementById('logout-btn').addEventListener('click', () => {
   updateAuthUI(null);
 });
 
+// 投稿
+document.getElementById('post-btn').addEventListener('click', () => {
+  const text = document.getElementById('home-input').value.trim();
+  if (!text || !currentUser) return;
+  posts.home.push({ text, email: currentUser.email, created: new Date().toISOString() });
+  localStorage.setItem('posts', JSON.stringify(posts));
+  document.getElementById('home-input').value = '';
+  loadPosts();
+});
+
+function loadPosts() {
+  const postsDiv = document.getElementById('home-posts');
+  postsDiv.innerHTML = '';
+  posts.home.slice().reverse().forEach(p => {
+    const el = document.createElement('p');
+    el.textContent = `${p.email}: ${p.text}`;
+    postsDiv.appendChild(el);
+  });
+}
+
 function updateAuthUI(user) {
   if (user) {
     document.getElementById('login-section').style.display = 'none';
     document.getElementById('logout-section').style.display = 'block';
     document.getElementById('username-display').textContent = user.email;
+    document.getElementById('home').style.display = 'block';
   } else {
     document.getElementById('login-section').style.display = 'block';
     document.getElementById('logout-section').style.display = 'none';
+    document.getElementById('home').style.display = 'none';
   }
 }
-
-// 投稿なども同じ(localStorageに保存)
