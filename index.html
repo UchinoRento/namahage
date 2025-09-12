@@ -3,35 +3,32 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>学校掲示板（動作確認版）</title>
+<title>佐世保高専 掲示板</title>
 <link rel="stylesheet" href="style.css">
 </head>
-<body>
-<h1>学校掲示板（動作確認版）</h1>
+<body class="dark-theme">
 
-<div id="auth">
-  <h2>ログイン / 登録</h2>
-  <input type="text" id="name" placeholder="名前">
-  <input type="text" id="studentId" placeholder="学籍番号">
-  <button id="registerBtn">登録</button>
-  <button id="loginBtn">ログイン</button>
+<h1>佐世保高専 学科別掲示板</h1>
 
-  <p id="message"></p> <!-- 登録・ログインの結果表示 -->
-  <p>登録済みユーザー:</p>
-  <ul id="userList"></ul>
+<nav>
+  <a href="#/">ホーム</a><br>
+  <a href="#/m">機械工学科</a><br>
+  <a href="#/e">電気電子工学科</a><br>
+  <a href="#/s">電子制御工学科</a><br>
+  <a href="#/c">物質工学科</a><br>
+</nav>
+
+<div id="app">
+  <div id="home" class="page active"><h2>ホーム</h2></div>
+  <div id="m" class="page"><h2>機械工学科ページ</h2></div>
+  <div id="e" class="page"><h2>電気電子工学科ページ</h2></div>
+  <div id="s" class="page"><h2>電子制御工学科ページ</h2></div>
+  <div id="c" class="page"><h2>物質工学科ページ</h2></div>
 </div>
 
-<div id="board" style="display:none;">
-  <p>ログイン中: <span id="currentUser"></span> 
-  <button id="logoutBtn">ログアウト</button></p>
+<button id="toggleTheme">Dark/Light</button>
 
-  <textarea id="newPost" placeholder="ここに投稿"></textarea><br>
-  <button id="addPostBtn">投稿</button>
-
-  <h2>投稿一覧</h2>
-  <div id="postContainer"></div>
-</div>
-
-<script src="script.js"></script>
+<script src="app.js"></script>
+<noscript>JavaScriptを有効にしてください。</noscript>
 </body>
 </html>
